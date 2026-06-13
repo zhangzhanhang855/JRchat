@@ -310,7 +310,7 @@
     });
 
     // 接收历史记录
-    socket.on('chat history', (history) => {
+    socket.on('load history', (history) => {
       document.getElementById('messages').innerHTML = '';
       history.forEach(msg => appendMessage(msg));
     });
