@@ -1,21 +1,132 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>极客聊天室</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>JRchat</title>
   <style>
-    body { margin: 0; padding-bottom: 3rem; font-family: sans-serif; }
-    #form { background: #f1f1f1; padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; }
-    #input { border: 1px solid #ccc; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
-    #form > button { background: #333; color: white; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; }
-    #messages { list-style-type: none; margin: 0; padding: 0; }
-    #messages > li { padding: 0.5rem 1rem; border-bottom: 1px solid #eee; }
+    /* 核心重置与全局样式 */
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      background-color: #e4ebf5; /* Telegram 经典护眼背景色 */
+      margin: 0; 
+      padding: 0; 
+      display: flex; 
+      flex-direction: column; 
+      height: 100vh; /* 占满整个屏幕高度 */
+    }
+
+    /* 顶部导航栏 (Telegram 蓝) */
+    .header { 
+      background-color: #527da3; 
+      color: white; 
+      padding: 10px 15px; 
+      display: flex; 
+      flex-direction: column;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+      z-index: 10; 
+    }
+    .header-title { font-weight: bold; font-size: 1.2rem; }
+    .header-subtitle { font-size: 0.8rem; opacity: 0.8; margin-top: 2px; }
+
+    /* 聊天消息区域 */
+    .chat-container { 
+      flex: 1; 
+      overflow-y: auto; 
+      padding: 15px; 
+      display: flex; 
+      flex-direction: column; 
+    }
+    #messages { 
+      list-style-type: none; 
+      margin: 0; 
+      padding: 0; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 12px; /* 消息之间的间距 */
+    }
+
+    /* 消息气泡外层包装器 */
+    .msg-wrapper { 
+      display: flex; 
+      flex-direction: column; 
+      max-width: 75%; 
+    }
+    .msg-in { align-self: flex-start; } /* 别人的消息靠左 */
+    .msg-out { align-self: flex-end; }  /* 我的消息靠右 */
+
+    /* 发送者昵称 */
+    .msg-sender { 
+      font-size: 0.75rem; 
+      color: #728291; 
+      margin-bottom: 4px; 
+      margin-left: 5px; 
+    }
+    .msg-out .msg-sender { display: none; /* 自己的消息气泡上方不显示名字 */ }
+
+    /* 气泡本体样式 */
+    .bubble { 
+      padding: 10px 14px; 
+      border-radius: 14px; 
+      font-size: 1rem; 
+      line-height: 1.4; 
+      word-wrap: break-word; 
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1); 
+    }
+    .msg-in .bubble { 
+      background-color: #ffffff; /* 别人的气泡：白色 */
+      border-bottom-left-radius: 4px; /* 模拟气泡的小尾巴 */
+    }
+    .msg-out .bubble { 
+      background-color: #effdde; /* 自己的气泡：Telegram 绿 */
+      border-bottom-right-radius: 4px; 
+    }
+
+    /* 底部输入框区域 */
+    #form { 
+      background: #ffffff; 
+      padding: 10px; 
+      display: flex; 
+      gap: 10px; 
+      align-items: center; 
+      padding-bottom: env(safe-area-inset-bottom, 10px); /* 适配全面屏底部安全区 */
+    }
+    #input { 
+      flex: 1; 
+      border: none; 
+      background: #f1f2f6; 
+      padding: 12px 18px; 
+      border-radius: 20px; 
+      font-size: 1rem; 
+      outline: none; 
+    }
+    #form > button { 
+      background: #527da3; 
+      color: white; 
+      border: none; 
+      padding: 12px 20px; 
+      border-radius: 20px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      transition: background 0.2s;
+    }
+    #form > button:active { background: #416482; }
   </style>
 </head>
 <body>
-  <ul id="messages"></ul>
+
+  <div class="header">
+    <div class="header-title">极客私密群聊</div>
+    <div class="header-subtitle">2 人在线</div>
+  </div>
+
+  <div class="chat-container">
+    <ul id="messages"></ul>
+  </div>
+
   <form id="form" action="">
-    <input id="input" autocomplete="off" /><button>发送</button>
+    <input id="input" autocomplete="off" placeholder="发消息..." />
+    <button>发送</button>
   </form>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -24,20 +135,58 @@
     const form = document.getElementById('form');
     const input = document.getElementById('input');
     const messages = document.getElementById('messages');
+    const chatContainer = document.querySelector('.chat-container');
+
+    // 页面加载时获取用户名
+    let myName = prompt("请输入你的聊天昵称：");
+    if (!myName || myName.trim() === '') myName = "匿名用户" + Math.floor(Math.random() * 1000);
 
     form.addEventListener('submit', function(e) {
       e.preventDefault();
-      if (input.value) {
-        socket.emit('chat message', input.value);
+      if (input.value.trim()) {
+        // 【核心修改】：发送一个包含发送者和内容的对象，而不是纯文本
+        const msgData = {
+          sender: myName,
+          text: input.value
+        };
+        socket.emit('chat message', msgData);
         input.value = '';
       }
     });
 
-    socket.on('chat message', function(msg) {
-      const item = document.createElement('li');
-      item.textContent = msg;
-      messages.appendChild(item);
-      window.scrollTo(0, document.body.scrollHeight);
+    // 监听收到的消息数据
+    socket.on('chat message', function(data) {
+      // 创建最外层的包裹 <li>
+      const wrapper = document.createElement('li');
+      wrapper.classList.add('msg-wrapper');
+
+      // 判断这条消息是不是“我”自己发的
+      if (data.sender === myName) {
+        wrapper.classList.add('msg-out'); // 应用靠右侧的样式
+      } else {
+        wrapper.classList.add('msg-in');  // 应用靠左侧的样式
+      }
+
+      // 创建显示名字的 div
+      const senderDiv = document.createElement('div');
+      senderDiv.classList.add('msg-sender');
+      senderDiv.textContent = data.sender;
+
+      // 创建显示文本内容的气泡 div
+      const bubbleDiv = document.createElement('div');
+      bubbleDiv.classList.add('bubble');
+      bubbleDiv.textContent = data.text;
+
+      // 组装气泡
+      wrapper.appendChild(senderDiv);
+      wrapper.appendChild(bubbleDiv);
+      messages.appendChild(wrapper);
+
+      // 收到消息后，平滑滚动到最底部
+      chatContainer.scrollTo({
+        top: chatContainer.scrollHeight,
+        behavior: 'smooth'
+      });
     });
   </script>
 </body>
