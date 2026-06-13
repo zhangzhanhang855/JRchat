@@ -5,30 +5,50 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 
-// 临时保存聊天记录的“记事本”（内存数组）
-const messageHistory = []; 
+// 【升级】：为不同的群聊建立独立的历史记录数组
+const roomHistory = {
+  '大厅': [],
+  '极客技术': [],
+  '日常摸鱼': []
+};
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
 io.on('connection', (socket) => {
-  // 当有新用户连接时，立刻把记事本里的历史记录全发给他
-  socket.emit('load history', messageHistory);
+  
+  // 监听用户加入特定群聊的请求
+  socket.on('join room', (roomName) => {
+    // 退出之前所在的所有房间（除了自己的默认 ID 房间）
+    Array.from(socket.rooms).forEach(r => {
+      if (r !== socket.id) socket.leave(r);
+    });
 
-  socket.on('chat message', (msgData) => {
-    // 收到新消息时，先抄写到记事本里
-    messageHistory.push(msgData);
+    // 加入新房间
+    socket.join(roomName);
     
-    // 为了防止内存撑爆，只保留最近的 100 条记录
-    if (messageHistory.length > 100) messageHistory.shift();
+    // 如果这个房间还没有历史记录数组，就初始化一个
+    if (!roomHistory[roomName]) roomHistory[roomName] = [];
+    
+    // 只把当前房间的历史记录发送给这个用户
+    socket.emit('load history', roomHistory[roomName]);
+  });
 
-    // 广播给所有人
-    io.emit('chat message', msgData);
+  // 监听消息并只广播给指定房间
+  socket.on('chat message', (msgData) => {
+    const room = msgData.room;
+    
+    // 记录到对应房间的记事本
+    if (!roomHistory[room]) roomHistory[room] = [];
+    roomHistory[room].push(msgData);
+    if (roomHistory[room].length > 100) roomHistory[room].shift();
+
+    // io.to(room) 表示只对这个房间里的人广播
+    io.to(room).emit('chat message', msgData);
   });
 });
 
-// 监听 Render 分配的端口，本地测试回退到 3000
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
