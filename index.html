@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>JRchat</title>
+  <title>Telegram Clone</title>
   <style>
     /* 核心重置与全局样式 */
     body { 
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-      background-color: #e4ebf5; /* Telegram 经典护眼背景色 */
+      background-color: #e4ebf5; 
       margin: 0; 
       padding: 0; 
       display: flex; 
       flex-direction: column; 
-      height: 100vh; /* 占满整个屏幕高度 */
+      height: 100vh; 
     }
 
     /* 顶部导航栏 (Telegram 蓝) */
@@ -43,7 +43,7 @@
       padding: 0; 
       display: flex; 
       flex-direction: column; 
-      gap: 12px; /* 消息之间的间距 */
+      gap: 12px; 
     }
 
     /* 消息气泡外层包装器 */
@@ -52,8 +52,8 @@
       flex-direction: column; 
       max-width: 75%; 
     }
-    .msg-in { align-self: flex-start; } /* 别人的消息靠左 */
-    .msg-out { align-self: flex-end; }  /* 我的消息靠右 */
+    .msg-in { align-self: flex-start; } 
+    .msg-out { align-self: flex-end; }  
 
     /* 发送者昵称 */
     .msg-sender { 
@@ -62,7 +62,7 @@
       margin-bottom: 4px; 
       margin-left: 5px; 
     }
-    .msg-out .msg-sender { display: none; /* 自己的消息气泡上方不显示名字 */ }
+    .msg-out .msg-sender { display: none; }
 
     /* 气泡本体样式 */
     .bubble { 
@@ -74,11 +74,11 @@
       box-shadow: 0 1px 2px rgba(0,0,0,0.1); 
     }
     .msg-in .bubble { 
-      background-color: #ffffff; /* 别人的气泡：白色 */
-      border-bottom-left-radius: 4px; /* 模拟气泡的小尾巴 */
+      background-color: #ffffff; 
+      border-bottom-left-radius: 4px; 
     }
     .msg-out .bubble { 
-      background-color: #effdde; /* 自己的气泡：Telegram 绿 */
+      background-color: #effdde; 
       border-bottom-right-radius: 4px; 
     }
 
@@ -89,7 +89,7 @@
       display: flex; 
       gap: 10px; 
       align-items: center; 
-      padding-bottom: env(safe-area-inset-bottom, 10px); /* 适配全面屏底部安全区 */
+      padding-bottom: env(safe-area-inset-bottom, 10px); 
     }
     #input { 
       flex: 1; 
@@ -117,7 +117,7 @@
 
   <div class="header">
     <div class="header-title">极客私密群聊</div>
-    <div class="header-subtitle">2 人在线</div>
+    <div class="header-subtitle">在线聊天中...</div>
   </div>
 
   <div class="chat-container">
@@ -141,10 +141,34 @@
     let myName = prompt("请输入你的聊天昵称：");
     if (!myName || myName.trim() === '') myName = "匿名用户" + Math.floor(Math.random() * 1000);
 
+    // 封装渲染气泡的函数
+    function renderMessage(data) {
+      const wrapper = document.createElement('li');
+      wrapper.classList.add('msg-wrapper');
+
+      if (data.sender === myName) {
+        wrapper.classList.add('msg-out');
+      } else {
+        wrapper.classList.add('msg-in');
+      }
+
+      const senderDiv = document.createElement('div');
+      senderDiv.classList.add('msg-sender');
+      senderDiv.textContent = data.sender;
+
+      const bubbleDiv = document.createElement('div');
+      bubbleDiv.classList.add('bubble');
+      bubbleDiv.textContent = data.text;
+
+      wrapper.appendChild(senderDiv);
+      wrapper.appendChild(bubbleDiv);
+      messages.appendChild(wrapper);
+    }
+
+    // 提交表单发送消息
     form.addEventListener('submit', function(e) {
       e.preventDefault();
       if (input.value.trim()) {
-        // 【核心修改】：发送一个包含发送者和内容的对象，而不是纯文本
         const msgData = {
           sender: myName,
           text: input.value
@@ -154,35 +178,17 @@
       }
     });
 
-    // 监听收到的消息数据
-    socket.on('chat message', function(data) {
-      // 创建最外层的包裹 <li>
-      const wrapper = document.createElement('li');
-      wrapper.classList.add('msg-wrapper');
+    // 监听并加载历史记录
+    socket.on('load history', function(historyArray) {
+      historyArray.forEach(msgData => {
+        renderMessage(msgData);
+      });
+      chatContainer.scrollTo(0, chatContainer.scrollHeight);
+    });
 
-      // 判断这条消息是不是“我”自己发的
-      if (data.sender === myName) {
-        wrapper.classList.add('msg-out'); // 应用靠右侧的样式
-      } else {
-        wrapper.classList.add('msg-in');  // 应用靠左侧的样式
-      }
-
-      // 创建显示名字的 div
-      const senderDiv = document.createElement('div');
-      senderDiv.classList.add('msg-sender');
-      senderDiv.textContent = data.sender;
-
-      // 创建显示文本内容的气泡 div
-      const bubbleDiv = document.createElement('div');
-      bubbleDiv.classList.add('bubble');
-      bubbleDiv.textContent = data.text;
-
-      // 组装气泡
-      wrapper.appendChild(senderDiv);
-      wrapper.appendChild(bubbleDiv);
-      messages.appendChild(wrapper);
-
-      // 收到消息后，平滑滚动到最底部
+    // 监听实时的新消息
+    socket.on('chat message', function(msgData) {
+      renderMessage(msgData);
       chatContainer.scrollTo({
         top: chatContainer.scrollHeight,
         behavior: 'smooth'
