@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>JRchat</title>
+  <title>JR Chat - Flagship Edition</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -230,7 +230,6 @@
       }, 3000);
     }
 
-    // 【修改核心】：增强版自定义弹窗，支持传入密码框类型
     const modalOverlay = document.getElementById('custom-modal-overlay');
     const modalInput = document.getElementById('modal-input');
     
@@ -241,7 +240,7 @@
       modalInput.style.display = showInput ? 'block' : 'none';
       if(showInput) {
         modalInput.value = '';
-        modalInput.type = inputType; // 动态支持密码框
+        modalInput.type = inputType; 
         modalInput.placeholder = placeholder || '';
       }
 
@@ -309,6 +308,12 @@
       document.getElementById('my-name').innerText = currentUser;
       document.getElementById('my-avatar').innerText = currentUser.charAt(0).toUpperCase();
       document.getElementById('my-avatar').style.background = getAvatarColor(currentUser);
+      
+      // 【新增】：请求系统发送通知的权限
+      if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+
       renderSidebar(userData.groups, userData.friends);
       switchRoom('General', '大厅', 'group');
     });
@@ -368,25 +373,16 @@
       }});
     };
 
-    // ==========================================
-    // 【核心升级】：毁灭性操作加入硬编码密码授权
-    // ==========================================
-    
+    // 【修改】：退群取消了密码校验，改回普通的二次确认
     window.promptLeaveGroup = (groupId) => {
       showModal({ 
-        title: '<i class="fa-solid fa-shield-halved" style="color:var(--danger-color)"></i> 安全校验', 
-        desc: '退群操作不可逆转！请输入授权码以继续：', 
-        placeholder: '输入 7 位数字授权码', 
-        showInput: true, 
-        inputType: 'password', // 密文输入框
+        title: '<i class="fa-solid fa-arrow-right-from-bracket" style="color:var(--danger-color)"></i> 退出群聊', 
+        desc: '确定要退出这个群聊吗？', 
+        showInput: false, 
         confirmText: '确认退出', 
         confirmClass: 'danger', 
-        onConfirm: (val) => {
-          if (val === '2437520') {
-            socket.emit('leave group', { username: currentUser, groupId });
-          } else {
-            showToast('授权码错误，操作中止', 'error');
-          }
+        onConfirm: () => {
+          socket.emit('leave group', { username: currentUser, groupId });
         }
       });
     };
@@ -395,9 +391,9 @@
       showModal({ 
         title: '<i class="fa-solid fa-shield-halved" style="color:var(--danger-color)"></i> 安全校验', 
         desc: `你要断绝与 ${friendName} 的好友关系！请输入授权码：`, 
-        placeholder: '输入 7 位数字授权码', 
+        placeholder: '输入数字授权码', 
         showInput: true, 
-        inputType: 'password', // 密文输入框
+        inputType: 'password', 
         confirmText: '断绝关系', 
         confirmClass: 'danger', 
         onConfirm: (val) => {
@@ -413,10 +409,10 @@
     window.promptClearHistory = (roomId) => {
       showModal({ 
         title: '<i class="fa-solid fa-triangle-exclamation" style="color:var(--danger-color)"></i> 最高权限授权', 
-        desc: '警告：这会永久销毁当前房间的所有聊天记录，所有人都不可见！请输入核弹密码：', 
-        placeholder: '输入 7 位数字授权码', 
+        desc: '警告：这会永久销毁当前房间的所有聊天记录！请输入核弹密码：', 
+        placeholder: '输入数字授权码', 
         showInput: true, 
-        inputType: 'password', // 密文输入框
+        inputType: 'password', 
         confirmText: '开启自毁', 
         confirmClass: 'danger', 
         onConfirm: (val) => {
@@ -468,7 +464,22 @@
       history.forEach(msg => appendMessage(msg));
     });
 
-    socket.on('chat message', msg => appendMessage(msg));
+    socket.on('chat message', msg => {
+      appendMessage(msg);
+      
+      // 【新增】：当应用处于后台时，通过 Web Notifications 弹出系统通知
+      if (msg.sender !== currentUser && "Notification" in window && Notification.permission === "granted" && document.hidden) {
+        const bodyText = msg.msgType === 'image' ? '[收到一张图片]' : msg.text;
+        const notification = new Notification(`JR Chat: ${msg.sender}`, {
+          body: bodyText,
+        });
+        
+        // 点击通知时，将网页唤醒/拉回前台
+        notification.onclick = function() {
+          window.focus();
+        };
+      }
+    });
 
     function appendMessage(msg) {
       const messagesDiv = document.getElementById('messages');
