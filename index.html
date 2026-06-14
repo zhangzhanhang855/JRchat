@@ -2,7 +2,14 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+  <!-- 【双端兼容核心】：强制设备采用全屏原生应用模式渲染 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0d0f14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="JR Chat">
+  
   <title>JR Chat - Enterprise Edition</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,7 +21,7 @@
     ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
     
     #auth-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 1000; display: flex; justify-content: center; align-items: center; background-image: radial-gradient(circle at top right, #1e1b4b, var(--bg-main) 60%); }
-    .auth-card { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid var(--border-color); padding: 40px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; }
+    .auth-card { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border-color); padding: 40px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; }
     .auth-card h2 { margin-bottom: 30px; font-weight: 800; font-size: 28px; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .auth-input { width: 100%; padding: 14px 18px; margin-bottom: 15px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: #fff; border-radius: 12px; outline: none; transition: 0.3s; }
     .auth-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--accent-color); color: #fff; font-weight: 600; cursor: pointer; margin-bottom: 15px; }
@@ -103,6 +110,7 @@
 </head>
 <body>
 
+  <!-- UI 组件 -->
   <div id="toast-container"></div>
   <div id="custom-modal-overlay">
     <div class="custom-modal" id="custom-modal">
@@ -113,6 +121,7 @@
     </div>
   </div>
 
+  <!-- 上帝控制台 -->
   <div id="admin-dashboard">
     <div class="admin-header">
       <h2><i class="fa-solid fa-crown"></i> JR Chat 全局控制中心</h2>
@@ -131,6 +140,7 @@
     </div>
   </div>
 
+  <!-- 登录 -->
   <div id="auth-screen">
     <div class="auth-card">
       <h2>JR Chat</h2>
@@ -142,6 +152,7 @@
     </div>
   </div>
 
+  <!-- 主界面 -->
   <aside id="sidebar">
     <div class="brand"><span><i class="fa-solid fa-infinity" style="color:var(--accent-color)"></i> JR Chat</span> <i class="fa-solid fa-xmark close-btn" onclick="toggleMenu()" style="display:none; cursor:pointer;"></i></div>
     <ul id="room-list"></ul>
@@ -189,7 +200,6 @@
     let isLoginMode = true;
     let onlineUserArray = [];
 
-    // UI 工具
     function showToast(msg, type = 'info') {
       const c = document.getElementById('toast-container');
       const t = document.createElement('div');
@@ -212,7 +222,6 @@
       modal.style.display='flex';
     }
 
-    // 鉴权
     function toggleAuthMode() { isLoginMode=!isLoginMode; document.getElementById('btn-login').style.display=isLoginMode?'block':'none'; document.getElementById('btn-register').style.display=isLoginMode?'none':'block'; document.getElementById('auth-switch-text').innerText=isLoginMode?'注册账号':'直接登录'; }
     function doLogin() { socket.emit('login', {username: document.getElementById('auth-username').value, password: document.getElementById('auth-password').value}); }
     function doRegister() { socket.emit('register', {username: document.getElementById('auth-username').value, password: document.getElementById('auth-password').value}); }
@@ -231,13 +240,16 @@
       if (data.role === 'admin') document.getElementById('admin-entry-btn').style.display = 'flex';
       if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
       
+      // 渲染侧边栏
       renderSidebar(data.groups, data.friends);
-      // 默认大厅，但因为是在 JS 里调用，我们传入 null 避免报错
-      switchRoom('General', '大厅', 'group', null);
+
+      // 【核心修复一】：登录成功后，只有当没有当前房间时，才默认进大厅。防止系统自动拉回！
+      if (!currentRoom) {
+        switchRoom('General', '大厅', 'group');
+      }
     });
 
-    socket.on('update sidebar', () => socket.emit('login', {username: currentUser, password: document.getElementById('auth-password').value}));
-
+    // 接收到别人上线提醒，静默触发侧边栏更新
     socket.on('online status update', (activeUsers) => {
       onlineUserArray = activeUsers;
       const p = document.getElementById('auth-password').value;
@@ -248,24 +260,24 @@
       const list = document.getElementById('room-list');
       list.innerHTML = '<div class="channel-title">Channels</div>';
       groups.forEach(g => { 
-        // 修复传递 this 的报错问题，在 onclick 里带上 this
-        list.innerHTML += `<li class="room-item ${currentRoom === g.groupId ? 'active' : ''}" onclick="switchRoom('${g.groupId}', '${g.groupName}', 'group', this)"><i class="fa-solid fa-hashtag"></i> ${g.groupName}</li>`; 
+        // 【核心修复二】：为每个 li 加上 data-room 属性，纯净匹配，摒弃 onclick 传 this 导致 iPad 闪退的雷区
+        list.innerHTML += `<li class="room-item ${currentRoom === g.groupId ? 'active' : ''}" data-room="${g.groupId}" onclick="switchRoom('${g.groupId}', '${g.groupName}', 'group')"><i class="fa-solid fa-hashtag"></i> ${g.groupName}</li>`; 
       });
       list.innerHTML += '<div class="channel-title" style="margin-top:15px;">Direct Messages</div>';
       friends.forEach(f => {
         const dmId = `DM_${[currentUser, f].sort().join('_')}`;
         const isOnline = onlineUserArray.includes(f);
-        list.innerHTML += `<li class="room-item ${isOnline ? 'is-online' : ''} ${currentRoom === dmId ? 'active' : ''}" onclick="switchRoom('${dmId}', '${f}', 'friend', this)"><i class="fa-solid fa-user"></i> ${f} <div class="online-dot"></div></li>`;
+        list.innerHTML += `<li class="room-item ${isOnline ? 'is-online' : ''} ${currentRoom === dmId ? 'active' : ''}" data-room="${dmId}" onclick="switchRoom('${dmId}', '${f}', 'friend')"><i class="fa-solid fa-user"></i> ${f} <div class="online-dot"></div></li>`;
       });
     }
 
     function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); }
 
-    // 【核心修复】：解决 iPad Safari 下 event 报错导致的无法切换问题，以及在头部增加 ID 显示功能
-    window.switchRoom = function(roomId, displayName, type, element) {
+    // 【核心修复三】：修改切换逻辑，不依赖 this
+    window.switchRoom = function(roomId, displayName, type) {
       currentRoom = roomId;
       
-      // 在名字旁边显示真实的 Room ID，让 Admin 用户可以直观复制
+      // 在名字旁边显示真实的 Room ID
       document.getElementById('current-room-name').innerHTML = type==='friend'
         ? `<i class="fa-solid fa-user" style="color:var(--text-muted)"></i> <span>${displayName}</span> <span style="font-size:12px; color:var(--text-muted); font-weight:normal; margin-left:8px;">ID: ${roomId}</span>`
         : `<i class="fa-solid fa-hashtag" style="color:var(--text-muted)"></i> <span>${displayName}</span> <span style="font-size:12px; color:var(--text-muted); font-weight:normal; margin-left:8px;">ID: ${roomId}</span>`;
@@ -277,11 +289,11 @@
       
       socket.emit('join room', roomId);
       
-      // 取消使用容易报错的 event.currentTarget，改为通过参数传递 element
-      document.querySelectorAll('.room-item').forEach(el=>el.classList.remove('active')); 
-      if (element) {
-        element.classList.add('active');
-      }
+      // 通过 data-room 匹配高亮，万无一失
+      document.querySelectorAll('.room-item').forEach(el => {
+        el.classList.remove('active');
+        if (el.getAttribute('data-room') === roomId) el.classList.add('active');
+      });
 
       if(window.innerWidth<=768) document.getElementById('sidebar').classList.remove('active');
     };
@@ -293,7 +305,7 @@
     window.promptDeleteFriend = (name) => showModal({title:'删好友', desc:'输入授权码继续(2437520)', inputType:'password', confirmClass:'danger', onConfirm:(v)=>{if(v==='2437520') socket.emit('delete friend', {username:currentUser, friendName:name}); else showToast('密码错误', 'error');}});
     window.promptClearHistory = (id) => showModal({title:'清空记录', desc:'核弹警告，输入授权码(2437520)', inputType:'password', confirmClass:'danger', onConfirm:(v)=>{if(v==='2437520') socket.emit('clear history', id); else showToast('密码错误', 'error');}});
 
-    // 上帝模式前端
+    // 上帝模式
     window.openAdminPanel = () => {
       document.getElementById('admin-dashboard').style.display = 'flex';
       socket.emit('admin fetch data', currentUser);
