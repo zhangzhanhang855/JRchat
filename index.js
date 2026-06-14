@@ -3,13 +3,23 @@ const app = express();
 const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
-const io = new Server(server, { maxHttpBufferSize: 5e6 }); // 允许最大 5MB 的数据传输（为图片准备）
+const io = new Server(server, { maxHttpBufferSize: 5e6 }); 
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const mongoURI = process.env.MONGODB_URI;
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('✅ 数据库连接成功'))
+  .then(async () => {
+    console.log('✅ 数据库连接成功');
+    // 【系统初始化】：自动生成超级管理员账号
+    const adminExists = await User.findOne({ username: 'admin' });
+    if (!adminExists) {
+      const salt = bcrypt.genSaltSync(10);
+      const hashedPassword = bcrypt.hashSync('admin', salt);
+      await new User({ username: 'admin', password: hashedPassword, role: 'admin' }).save();
+      console.log('👑 超级管理员 admin 账号已就绪');
+    }
+  })
   .catch(err => console.error('❌ 数据库连接失败:', err));
 
 // --- 数据库模型 ---
@@ -17,7 +27,9 @@ const userSchema = new mongoose.Schema({
   username: { type: String, unique: true, required: true },
   password: { type: String, required: true },
   friends: [String],
-  groups: [{ groupId: String, groupName: String }]
+  groups: [{ groupId: String, groupName: String }],
+  role: { type: String, default: 'user' }, // 'user' 或 'admin'
+  isBanned: { type: Boolean, default: false } // 【新增】：封禁状态
 });
 const User = mongoose.model('User', userSchema);
 
@@ -28,22 +40,32 @@ const groupSchema = new mongoose.Schema({
 });
 const Group = mongoose.model('Group', groupSchema);
 
-// 【升级】：加入 msgType 字段，用来区分是文字还是图片
 const messageSchema = new mongoose.Schema({
   room: String,
   sender: String,
-  text: String, // 如果是图片，这里存的就是 Base64 字符串
-  msgType: { type: String, default: 'text' }, // 'text' 或 'image'
+  text: String,
+  msgType: { type: String, default: 'text' },
   timestamp: { type: Date, default: Date.now }
 });
 const Message = mongoose.model('Message', messageSchema);
 
+// 【新增】：在线用户追踪器
+const onlineUsers = new Map(); // socket.id -> username
+
 app.get('/', (req, res) => { res.sendFile(__dirname + '/index.html'); });
 
 io.on('connection', (socket) => {
-  // 1. 注册
+  
+  // 发送最新在线名单给所有人
+  const broadcastOnlineStatus = () => {
+    const activeUsernames = Array.from(new Set(onlineUsers.values()));
+    io.emit('online status update', activeUsernames);
+  };
+
+  // 1. 注册与登录
   socket.on('register', async ({ username, password }) => {
     try {
+      if (username.toLowerCase() === 'admin') return socket.emit('auth error', '保留关键字，无法注册！');
       const existingUser = await User.findOne({ username });
       if (existingUser) return socket.emit('auth error', '用户名已被抢占！');
       const salt = bcrypt.genSaltSync(10);
@@ -54,22 +76,38 @@ io.on('connection', (socket) => {
     } catch (err) { console.error(err); }
   });
 
-  // 2. 登录
   socket.on('login', async ({ username, password }) => {
     try {
       const user = await User.findOne({ username });
       if (!user) return socket.emit('auth error', '用户不存在！');
+      
+      // 【拦截】：检查是否被封禁
+      if (user.isBanned) return socket.emit('auth error', '🚫 您的账号已被管理员封禁！');
+
       const isMatch = bcrypt.compareSync(password, user.password);
       if (!isMatch) return socket.emit('auth error', '密码错误！');
-      socket.emit('login success', { username: user.username, friends: user.friends, groups: user.groups });
+      
+      // 记录在线状态
+      onlineUsers.set(socket.id, user.username);
+      socket.username = user.username; 
+      broadcastOnlineStatus();
+
+      socket.emit('login success', { username: user.username, friends: user.friends, groups: user.groups, role: user.role });
     } catch (err) { console.error(err); }
   });
 
-  // 3. 建群 / 加群 / 加好友
+  // 断开连接时更新在线状态
+  socket.on('disconnect', () => {
+    if (onlineUsers.has(socket.id)) {
+      onlineUsers.delete(socket.id);
+      broadcastOnlineStatus();
+    }
+  });
+
+  // (常规的加群、加好友、退群等逻辑保持不变，为节省篇幅略去注释...)
   socket.on('create group', async ({ username, groupName }) => {
     const groupId = Math.floor(1000 + Math.random() * 9000).toString(); 
-    const newGroup = new Group({ groupId, groupName, members: [username] });
-    await newGroup.save();
+    await new Group({ groupId, groupName, members: [username] }).save();
     await User.updateOne({ username }, { $push: { groups: { groupId, groupName } } });
     socket.emit('system message', `群聊 [${groupName}] 创建成功！群号: ${groupId}`);
     socket.emit('update sidebar');
@@ -95,9 +133,12 @@ io.on('connection', (socket) => {
     await User.updateOne({ username: friendName }, { $push: { friends: username } });
     socket.emit('system message', `已添加 ${friendName} 为好友！`);
     socket.emit('update sidebar');
+    
+    // 如果对方在线，强制刷新他的侧边栏
+    const friendSocketId = [...onlineUsers.entries()].find(([k, v]) => v === friendName)?.[0];
+    if (friendSocketId) io.to(friendSocketId).emit('update sidebar');
   });
 
-  // 【新增】：删除好友
   socket.on('delete friend', async ({ username, friendName }) => {
     await User.updateOne({ username }, { $pull: { friends: friendName } });
     await User.updateOne({ username: friendName }, { $pull: { friends: username } });
@@ -105,7 +146,6 @@ io.on('connection', (socket) => {
     socket.emit('update sidebar');
   });
 
-  // 【新增】：退出群聊
   socket.on('leave group', async ({ username, groupId }) => {
     if (groupId === 'General') return socket.emit('system message', '大厅是无法退出的哦！');
     await Group.updateOne({ groupId }, { $pull: { members: username } });
@@ -114,13 +154,11 @@ io.on('connection', (socket) => {
     socket.emit('update sidebar');
   });
 
-  // 【新增】：清空房间聊天记录
   socket.on('clear history', async (room) => {
     await Message.deleteMany({ room });
-    io.to(room).emit('history cleared'); // 广播给房间里所有人：记录已清空
+    io.to(room).emit('history cleared'); 
   });
 
-  // 4. 收发消息（支持文字和图片）
   socket.on('join room', async (roomName) => {
     Array.from(socket.rooms).forEach(r => { if (r !== socket.id) socket.leave(r); });
     socket.join(roomName);
@@ -132,6 +170,54 @@ io.on('connection', (socket) => {
     const newMessage = new Message(msgData);
     await newMessage.save();
     io.to(msgData.room).emit('chat message', msgData);
+  });
+
+  // ==========================================
+  // 👑 上帝模式（Admin 专属接口）
+  // ==========================================
+  const checkAdmin = async (username) => {
+    const user = await User.findOne({ username });
+    return user && user.role === 'admin';
+  };
+
+  // 获取全局数据总览
+  socket.on('admin fetch data', async (adminUser) => {
+    if (!(await checkAdmin(adminUser))) return;
+    const users = await User.find({}, { password: 0 }); // 不传密文密码给前端
+    const groups = await Group.find({});
+    socket.emit('admin data loaded', { users, groups });
+  });
+
+  // 封禁 / 解封用户
+  socket.on('admin toggle ban', async ({ adminUser, targetUser, banStatus }) => {
+    if (!(await checkAdmin(adminUser)) || targetUser === 'admin') return;
+    await User.updateOne({ username: targetUser }, { isBanned: banStatus });
+    socket.emit('system message', `已${banStatus ? '封禁' : '解封'}用户：${targetUser}`);
+    
+    // 如果被封禁且在线，直接踢下线
+    if (banStatus) {
+      const targetSocketId = [...onlineUsers.entries()].find(([k, v]) => v === targetUser)?.[0];
+      if (targetSocketId) {
+        io.to(targetSocketId).emit('auth error', '您已被管理员强行踢出并封禁！');
+        io.sockets.sockets.get(targetSocketId)?.disconnect(true);
+      }
+    }
+  });
+
+  // 强制修改用户密码
+  socket.on('admin reset password', async ({ adminUser, targetUser, newPassword }) => {
+    if (!(await checkAdmin(adminUser))) return;
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(newPassword, salt);
+    await User.updateOne({ username: targetUser }, { password: hashedPassword });
+    socket.emit('system message', `已将 ${targetUser} 的密码重置！`);
+  });
+
+  // 强制偷窥任意房间记录
+  socket.on('admin fetch room history', async ({ adminUser, roomId }) => {
+    if (!(await checkAdmin(adminUser))) return;
+    const history = await Message.find({ room: roomId }).sort({ timestamp: 1 }).limit(200);
+    socket.emit('admin room history loaded', history);
   });
 });
 
