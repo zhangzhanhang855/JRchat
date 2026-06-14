@@ -3,119 +3,68 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>JR Chat - Premium</title>
+  <title>JR Chat - Pro</title>
   <style>
-    /* 全局重置与基础变量 */
     :root {
-      --primary-color: #6c5ce7;
-      --primary-hover: #5b4bc4;
+      --primary-color: #6c5ce7; --primary-hover: #5b4bc4;
       --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-      --glass-bg: rgba(255, 255, 255, 0.05);
-      --glass-border: rgba(255, 255, 255, 0.1);
-      --text-main: #ffffff;
-      --text-muted: #a0a0b5;
+      --glass-bg: rgba(255, 255, 255, 0.05); --glass-border: rgba(255, 255, 255, 0.1);
+      --text-main: #ffffff; --text-muted: #a0a0b5;
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
     body { background: var(--bg-gradient); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; }
 
-    /* 侧边栏 */
-    #sidebar {
-      width: 280px;
-      background: var(--glass-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-right: 1px solid var(--glass-border);
-      display: flex;
-      flex-direction: column;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      z-index: 100;
+    /* --- 登录注册遮罩层 --- */
+    #auth-screen {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: var(--bg-gradient); z-index: 1000;
+      display: flex; justify-content: center; align-items: center;
     }
-
-    .brand {
-      padding: 30px 20px 20px;
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      background: -webkit-linear-gradient(#fff, #a0a0b5);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .auth-card {
+      background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border); padding: 40px; border-radius: 20px; width: 90%; max-width: 400px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5); text-align: center;
     }
+    .auth-card h2 { margin-bottom: 20px; font-weight: 800; font-style: italic; color: #fff; }
+    .auth-input { width: 100%; padding: 12px 15px; margin-bottom: 15px; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); color: #fff; border-radius: 10px; outline: none; }
+    .auth-btn { width: 100%; padding: 12px; border: none; border-radius: 10px; background: var(--primary-color); color: #fff; font-weight: bold; cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
+    .auth-btn:hover { background: var(--primary-hover); }
+    .auth-switch { color: var(--text-muted); font-size: 13px; cursor: pointer; text-decoration: underline; }
 
-    .close-btn { display: none; background: none; border: none; color: #fff; font-size: 24px; }
-
-    .channel-title { padding: 0 20px 10px; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
-
+    /* 主界面样式（继承之前版本） */
+    #sidebar { width: 280px; background: var(--glass-bg); backdrop-filter: blur(20px); border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; z-index: 100; transition: transform 0.3s; }
+    .brand { padding: 30px 20px 20px; font-size: 24px; font-weight: 800; background: -webkit-linear-gradient(#fff, #a0a0b5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: flex; justify-content: space-between; align-items: center; }
+    .channel-title { padding: 10px 20px 5px; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
     #room-list { list-style: none; overflow-y: auto; flex: 1; margin-bottom: 10px; }
-    
-    .room-item {
-      padding: 12px 20px; margin: 5px 15px; border-radius: 12px; cursor: pointer; color: var(--text-muted);
-      transition: all 0.2s ease; display: flex; align-items: center; gap: 10px; font-size: 14px;
-    }
+    .room-item { padding: 12px 20px; margin: 5px 15px; border-radius: 12px; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; gap: 10px; font-size: 14px; }
     .room-item:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
-    .room-item.active { background: var(--primary-color); color: #fff; box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4); }
-
-    /* 新增：侧边栏操作面板 */
-    .sidebar-actions {
-      padding: 15px;
-      border-top: 1px solid var(--glass-border);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      background: rgba(0, 0, 0, 0.1);
-    }
-
-    .action-btn {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--glass-border);
-      color: #fff;
-      padding: 10px 15px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: all 0.2s;
-      text-align: left;
-    }
-    .action-btn:hover { background: var(--primary-color); border-color: var(--primary-color); box-shadow: 0 2px 10px rgba(108, 92, 231, 0.3); }
-
-    /* 主聊天区域 */
-    #main-chat { flex: 1; display: flex; flex-direction: column; position: relative; }
-    #chat-header { padding: 20px 30px; background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; gap: 15px; z-index: 10; }
+    .room-item.active { background: var(--primary-color); color: #fff; }
+    
+    .sidebar-actions { padding: 15px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 10px; background: rgba(0, 0, 0, 0.1); }
+    .action-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); color: #fff; padding: 10px 15px; border-radius: 10px; cursor: pointer; font-size: 13px; text-align: left; }
+    
+    #main-chat { flex: 1; display: flex; flex-direction: column; }
+    #chat-header { padding: 20px 30px; background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; gap: 15px; }
     .menu-toggle { display: none; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
-
-    /* 消息列表区 */
-    #messages { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth; }
+    #messages { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
     .message-wrapper { display: flex; gap: 15px; max-width: 80%; }
     .message-wrapper.self { align-self: flex-end; flex-direction: row-reverse; }
-
-    .avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); flex-shrink: 0; }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; flex-shrink: 0; }
     .msg-content { display: flex; flex-direction: column; gap: 5px; }
     .message-wrapper.self .msg-content { align-items: flex-end; }
     .sender-name { font-size: 12px; color: var(--text-muted); margin: 0 5px; }
-    .bubble { padding: 12px 18px; border-radius: 18px; font-size: 15px; line-height: 1.5; background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); word-wrap: break-word; }
-    .message-wrapper.self .bubble { background: var(--primary-color); border-color: var(--primary-color); box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3); }
-
-    /* 输入区 */
+    .bubble { padding: 12px 18px; border-radius: 18px; font-size: 15px; line-height: 1.5; background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(5px); word-wrap: break-word; }
+    .message-wrapper.self .bubble { background: var(--primary-color); border-color: var(--primary-color); }
+    
     #input-container { padding: 20px 30px; background: linear-gradient(to top, rgba(15, 12, 41, 0.9), transparent); }
-    #form { display: flex; gap: 15px; background: rgba(255, 255, 255, 0.08); padding: 8px; border-radius: 30px; border: 1px solid var(--glass-border); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    #form { display: flex; gap: 15px; background: rgba(255, 255, 255, 0.08); padding: 8px; border-radius: 30px; border: 1px solid var(--glass-border); }
     #input { flex: 1; background: transparent; border: none; padding: 10px 20px; color: #fff; font-size: 16px; outline: none; }
-    #input::placeholder { color: var(--text-muted); }
-    button[type="submit"] { background: var(--primary-color); color: white; border: none; padding: 0 25px; border-radius: 25px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-    button[type="submit"]:hover { background: var(--primary-hover); }
-
-    /* 手机端响应式 */
+    button[type="submit"] { background: var(--primary-color); color: white; border: none; padding: 0 25px; border-radius: 25px; font-weight: 600; cursor: pointer; }
+    
     @media (max-width: 768px) {
       .menu-toggle { display: block; }
       #sidebar { position: absolute; height: 100%; transform: translateX(-100%); box-shadow: 5px 0 25px rgba(0,0,0,0.5); }
       #sidebar.active { transform: translateX(0); }
-      .close-btn { display: block; }
       #chat-header { padding: 15px 20px; }
       #messages { padding: 20px 15px; }
       .message-wrapper { max-width: 95%; }
@@ -125,18 +74,20 @@
 </head>
 <body>
 
-  <aside id="sidebar">
-    <div class="brand">JR Chat <span class="close-btn" onclick="toggleMenu()">×</span></div>
-    
-    <div class="channel-title">Channels</div>
-    <ul id="room-list">
-      <li class="room-item active" onclick="switchRoom('General')"># General</li>
-      <li class="room-item" onclick="switchRoom('Music')"># Music</li>
-      <li class="room-item" onclick="switchRoom('Gaming')"># Gaming</li>
-      <li class="room-item" onclick="switchRoom('Tech')"># Tech</li>
-    </ul>
+  <div id="auth-screen">
+    <div class="auth-card">
+      <h2>JR Chat</h2>
+      <input type="text" id="auth-username" class="auth-input" placeholder="用户名" autocomplete="off">
+      <input type="password" id="auth-password" class="auth-input" placeholder="密码">
+      <button class="auth-btn" id="btn-login" onclick="doLogin()">登 录</button>
+      <button class="auth-btn" id="btn-register" onclick="doRegister()" style="display:none; background:#2980b9;">注 册</button>
+      <div class="auth-switch" onclick="toggleAuthMode()" id="auth-switch-text">没有账号？点击注册</div>
+    </div>
+  </div>
 
-    <!-- 新增：操作控制面板 -->
+  <aside id="sidebar">
+    <div class="brand">JR Chat <span class="close-btn" style="display:none;font-size:24px;cursor:pointer;" onclick="toggleMenu()">×</span></div>
+    <ul id="room-list"></ul>
     <div class="sidebar-actions">
       <button class="action-btn" onclick="createNewGroup()">➕ 创建群聊</button>
       <button class="action-btn" onclick="joinGroupById()">🔍 输入群号加入</button>
@@ -147,13 +98,13 @@
   <main id="main-chat">
     <header id="chat-header">
       <button class="menu-toggle" onclick="toggleMenu()">☰</button>
-      <h3 id="current-room-name"># General</h3>
+      <h3 id="current-room-name">大厅</h3>
     </header>
     <div id="messages"></div>
     <div id="input-container">
       <form id="form" action="">
-        <input id="input" autocomplete="off" placeholder="Type a message..." />
-        <button type="submit">Send</button>
+        <input id="input" autocomplete="off" placeholder="发消息..." />
+        <button type="submit">发送</button>
       </form>
     </div>
   </main>
@@ -161,117 +112,126 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    let currentRoom = 'General';
-    let username = localStorage.getItem('username');
+    let currentUser = '';
+    let currentRoom = '';
+    let isLoginMode = true;
+
+    // --- 鉴权UI逻辑 ---
+    function toggleAuthMode() {
+      isLoginMode = !isLoginMode;
+      document.getElementById('btn-login').style.display = isLoginMode ? 'block' : 'none';
+      document.getElementById('btn-register').style.display = isLoginMode ? 'none' : 'block';
+      document.getElementById('auth-switch-text').innerText = isLoginMode ? '没有账号？点击注册' : '已有账号？点击登录';
+    }
+
+    function doLogin() {
+      const u = document.getElementById('auth-username').value.trim();
+      const p = document.getElementById('auth-password').value.trim();
+      if(u && p) socket.emit('login', { username: u, password: p });
+    }
+
+    function doRegister() {
+      const u = document.getElementById('auth-username').value.trim();
+      const p = document.getElementById('auth-password').value.trim();
+      if(u && p) socket.emit('register', { username: u, password: p });
+    }
+
+    // --- 后端回调处理 ---
+    socket.on('auth error', msg => alert("❌ " + msg));
+    socket.on('auth success', msg => { alert("✅ " + msg); toggleAuthMode(); });
+    socket.on('system message', msg => alert("🔔 " + msg));
+
+    // 登录成功，渲染侧边栏
+    socket.on('login success', userData => {
+      currentUser = userData.username;
+      document.getElementById('auth-screen').style.display = 'none'; // 隐藏登录界面
+      renderSidebar(userData.groups, userData.friends);
+      
+      // 默认进入大厅
+      switchRoom('General', '大厅');
+    });
+
+    // 请求刷新侧边栏
+    socket.on('update sidebar', () => {
+      // 懒人写法：再发一次登录请求刷新数据
+      const p = document.getElementById('auth-password').value;
+      socket.emit('login', { username: currentUser, password: p });
+    });
+
+    function renderSidebar(groups, friends) {
+      const list = document.getElementById('room-list');
+      list.innerHTML = '<div class="channel-title">我的群聊</div>';
+      groups.forEach(g => {
+        list.innerHTML += `<li class="room-item ${currentRoom === g.groupId ? 'active' : ''}" onclick="switchRoom('${g.groupId}', '${g.groupName}')"># ${g.groupName}</li>`;
+      });
+      list.innerHTML += '<div class="channel-title" style="margin-top:15px;">我的好友</div>';
+      friends.forEach(f => {
+        const dmId = `DM_${[currentUser, f].sort().join('_')}`;
+        list.innerHTML += `<li class="room-item ${currentRoom === dmId ? 'active' : ''}" onclick="switchRoom('${dmId}', '👤 ${f}')">👤 ${f}</li>`;
+      });
+    }
+
+    // --- 交互功能 ---
+    function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); }
     
+    window.switchRoom = function(roomId, displayName) {
+      currentRoom = roomId;
+      document.getElementById('current-room-name').textContent = displayName;
+      document.getElementById('messages').innerHTML = '';
+      socket.emit('join room', roomId);
+      
+      // 更新高亮
+      document.querySelectorAll('.room-item').forEach(el => el.classList.remove('active'));
+      event && event.currentTarget && event.currentTarget.classList.add('active');
+      if(window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('active');
+    };
+
+    window.createNewGroup = function() {
+      const name = prompt("请输入新群聊名称：");
+      if (name) socket.emit('create group', { username: currentUser, groupName: name });
+    };
+
+    window.joinGroupById = function() {
+      const id = prompt("请输入群号：");
+      if (id) socket.emit('join group by id', { username: currentUser, groupId: id });
+    };
+
+    window.addNewFriend = function() {
+      const name = prompt("请输入对方用户名：");
+      if (name) socket.emit('add friend', { username: currentUser, friendName: name });
+    };
+
+    // --- 聊天功能 ---
     function getAvatarColor(name) {
       let hash = 0; for (let i = 0; i < name.length; i++) { hash = name.charCodeAt(i) + ((hash << 5) - hash); }
       return `hsl(${hash % 360}, 70%, 60%)`;
     }
 
-    if (!username) {
-      username = prompt('Please enter your name for JR Chat:') || 'Guest_' + Math.floor(Math.random() * 1000);
-      localStorage.setItem('username', username);
-    }
-
-    socket.emit('join room', currentRoom);
-
-    function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); }
-
-    // 切换房间逻辑（包含了动态添加房间到左侧的逻辑）
-    window.switchRoom = function(room) {
-      currentRoom = room;
-      document.getElementById('current-room-name').textContent = room.includes('DM_') ? '👤 ' + room.replace('DM_', '') : '# ' + room;
-      document.getElementById('messages').innerHTML = '';
-      socket.emit('join room', room);
-      
-      document.querySelectorAll('.room-item').forEach(el => el.classList.remove('active'));
-      
-      // 查找是否已经有这个房间的标签，如果有就激活，没有就忽略（因为可能是新创的）
-      const existingRoom = Array.from(document.querySelectorAll('.room-item')).find(el => el.textContent.includes(room));
-      if (existingRoom) {
-        existingRoom.classList.add('active');
-      }
-
-      if(window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('active');
-    };
-
-    /* =========================================
-       新增：三大核心交互功能的弹窗与通信逻辑
-       ========================================= */
-
-    // 1. 创建群聊
-    window.createNewGroup = function() {
-      const groupName = prompt("✨ 请输入新群聊的名称（后端连通后将生成专属群号）：");
-      if (groupName && groupName.trim() !== '') {
-        // 先临时在前端加一个标签，等后端改好后，由后端分配并返回真实的 ID
-        addRoomToSidebar(groupName, 'group');
-        switchRoom(groupName);
-        alert(`群聊 "${groupName}" 创建指令已发出！等待后端记录...`);
-        // socket.emit('create group', groupName); // 下一步后端写好后再解开注释
-      }
-    };
-
-    // 2. 输入群号加入群聊
-    window.joinGroupById = function() {
-      const groupId = prompt("🔍 请输入要加入的群号（如 8848）：");
-      if (groupId && groupId.trim() !== '') {
-        alert(`请求加入群号: ${groupId}，等待后端校验...`);
-        // socket.emit('join group by id', groupId); // 下一步后端写好后再解开注释
-      }
-    };
-
-    // 3. 添加好友
-    window.addNewFriend = function() {
-      const friendName = prompt("👤 请输入好友的准确用户名：");
-      if (friendName && friendName.trim() !== '') {
-        if(friendName === username) return alert("不能添加自己为好友哦！");
-        
-        // 临时生成一个私聊房间号规则（比如：DM_A_B）
-        const dmRoom = `DM_${[username, friendName].sort().join('_')}`;
-        addRoomToSidebar(`与 ${friendName} 的私聊`, 'dm', dmRoom);
-        switchRoom(dmRoom);
-        alert(`正在发起与 ${friendName} 的私聊... 等待后端建立羁绊！`);
-        // socket.emit('add friend', friendName); // 下一步后端写好后再解开注释
-      }
-    };
-
-    // 辅助功能：将新房间动态渲染到侧边栏
-    function addRoomToSidebar(displayName, type, actualRoomId = displayName) {
-      const ul = document.getElementById('room-list');
-      const li = document.createElement('li');
-      li.className = 'room-item';
-      li.innerHTML = type === 'dm' ? `👤 ${displayName}` : `# ${displayName}`;
-      li.onclick = () => switchRoom(actualRoomId);
-      ul.appendChild(li);
-    }
-
-    /* ========================================= */
-
     const form = document.getElementById('form');
     const input = document.getElementById('input');
     form.addEventListener('submit', function(e) {
       e.preventDefault();
-      if (input.value) {
-        socket.emit('chat message', { room: currentRoom, sender: username, text: input.value });
+      if (input.value && currentRoom) {
+        socket.emit('chat message', { room: currentRoom, sender: currentUser, text: input.value });
         input.value = '';
       }
     });
 
-    socket.on('load history', (history) => {
+    socket.on('load history', history => {
       document.getElementById('messages').innerHTML = '';
       history.forEach(msg => appendMessage(msg));
     });
 
-    socket.on('chat message', (msg) => { appendMessage(msg); });
+    socket.on('chat message', msg => appendMessage(msg));
 
     function appendMessage(msg) {
       const messagesDiv = document.getElementById('messages');
-      const isSelf = msg.sender === username;
-      const wrapper = document.createElement('div');
-      wrapper.className = `message-wrapper ${isSelf ? 'self' : ''}`;
+      const isSelf = msg.sender === currentUser;
       const initial = msg.sender.charAt(0).toUpperCase();
       const color = getAvatarColor(msg.sender);
+      
+      const wrapper = document.createElement('div');
+      wrapper.className = `message-wrapper ${isSelf ? 'self' : ''}`;
       wrapper.innerHTML = `
         <div class="avatar" style="background: ${color}; color: white;">${initial}</div>
         <div class="msg-content">
