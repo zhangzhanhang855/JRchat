@@ -13,7 +13,6 @@
     body { background: var(--bg-main); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; }
     ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
     
-    /* 核心布局复用 */
     #auth-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 1000; display: flex; justify-content: center; align-items: center; background-image: radial-gradient(circle at top right, #1e1b4b, var(--bg-main) 60%); }
     .auth-card { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid var(--border-color); padding: 40px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; }
     .auth-card h2 { margin-bottom: 30px; font-weight: 800; font-size: 28px; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -29,7 +28,6 @@
     .room-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
     .room-item.active { background: var(--accent-color); color: #fff; }
     
-    /* 【新增】：在线状态绿点 */
     .online-dot { width: 8px; height: 8px; background-color: #4ade80; border-radius: 50%; box-shadow: 0 0 5px #4ade80; margin-left: auto; display: none; }
     .room-item.is-online .online-dot { display: block; }
     
@@ -70,7 +68,6 @@
     .send-btn { background: var(--accent-color); color: white; border: none; width: 40px; height: 40px; border-radius: 14px; cursor: pointer; }
     .upload-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; }
 
-    /* ================= 【新增】：上帝模式控制台样式 ================= */
     #admin-dashboard { position: fixed; inset: 0; background: var(--bg-main); z-index: 4000; display: none; flex-direction: column; }
     .admin-header { padding: 20px; background: rgba(234, 179, 8, 0.1); border-bottom: 1px solid rgba(234, 179, 8, 0.3); display: flex; justify-content: space-between; align-items: center; color: #facc15; }
     .admin-content { flex: 1; display: flex; overflow: hidden; }
@@ -83,7 +80,6 @@
     .btn-warn { background: rgba(234, 179, 8, 0.2); color: #facc15; }
     .btn-danger { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
 
-    /* 辅助UI */
     #custom-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 5000; display: none; justify-content: center; align-items: center; }
     .custom-modal { background: var(--bg-panel); border: 1px solid var(--border-color); width: 90%; max-width: 360px; border-radius: 20px; padding: 25px; }
     .modal-input { width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: #fff; border-radius: 10px; margin-bottom: 20px; outline: none;}
@@ -123,16 +119,14 @@
       <button class="btn-sm btn-warn" onclick="document.getElementById('admin-dashboard').style.display='none'">返回聊天</button>
     </div>
     <div class="admin-content">
-      <div class="admin-sidebar" id="admin-user-list">
-        </div>
+      <div class="admin-sidebar" id="admin-user-list"></div>
       <div class="admin-main">
         <h3 style="margin-bottom:15px; color: var(--text-muted);"><i class="fa-solid fa-eye"></i> 监听模式：输入群号或私聊号查看记录</h3>
         <div style="display:flex; gap:10px; margin-bottom:20px;">
           <input type="text" id="admin-room-search" class="modal-input" placeholder="例如: 8848 或 DM_A_B" style="margin:0;">
           <button class="btn-sm btn-warn" onclick="adminFetchRoom()">调取记录</button>
         </div>
-        <div id="admin-room-history" style="background:rgba(0,0,0,0.3); border-radius:12px; padding:15px; height:400px; overflow-y:auto; border:1px solid var(--border-color); font-size:13px;">
-          </div>
+        <div id="admin-room-history" style="background:rgba(0,0,0,0.3); border-radius:12px; padding:15px; height:400px; overflow-y:auto; border:1px solid var(--border-color); font-size:13px;"></div>
       </div>
     </div>
   </div>
@@ -172,7 +166,7 @@
     <header id="chat-header">
       <div class="header-left">
         <button class="menu-toggle" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
-        <h3 id="current-room-name">大厅</h3>
+        <h3 id="current-room-name" style="display:flex; align-items:center; gap:8px;">大厅</h3>
       </div>
       <div class="room-actions" id="room-actions"></div>
     </header>
@@ -193,7 +187,7 @@
     let currentUser = '';
     let currentRoom = '';
     let isLoginMode = true;
-    let onlineUserArray = []; // 本地缓存的在线用户名单
+    let onlineUserArray = [];
 
     // UI 工具
     function showToast(msg, type = 'info') {
@@ -234,20 +228,18 @@
       document.getElementById('my-avatar').innerText = currentUser.charAt(0).toUpperCase();
       document.getElementById('my-avatar').style.background = getAvatarColor(currentUser);
       
-      // 如果是 admin，显示皇冠按钮
       if (data.role === 'admin') document.getElementById('admin-entry-btn').style.display = 'flex';
-
       if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+      
       renderSidebar(data.groups, data.friends);
-      switchRoom('General', '大厅', 'group');
+      // 默认大厅，但因为是在 JS 里调用，我们传入 null 避免报错
+      switchRoom('General', '大厅', 'group', null);
     });
 
     socket.on('update sidebar', () => socket.emit('login', {username: currentUser, password: document.getElementById('auth-password').value}));
 
-    // 【新增】：监听全局在线状态
     socket.on('online status update', (activeUsers) => {
       onlineUserArray = activeUsers;
-      // 触发侧边栏重新渲染以刷新绿点
       const p = document.getElementById('auth-password').value;
       if(currentUser && p) socket.emit('login', {username: currentUser, password: p});
     });
@@ -255,28 +247,42 @@
     function renderSidebar(groups, friends) {
       const list = document.getElementById('room-list');
       list.innerHTML = '<div class="channel-title">Channels</div>';
-      groups.forEach(g => { list.innerHTML += `<li class="room-item ${currentRoom === g.groupId ? 'active' : ''}" onclick="switchRoom('${g.groupId}', '${g.groupName}', 'group')"><i class="fa-solid fa-hashtag"></i> ${g.groupName}</li>`; });
+      groups.forEach(g => { 
+        // 修复传递 this 的报错问题，在 onclick 里带上 this
+        list.innerHTML += `<li class="room-item ${currentRoom === g.groupId ? 'active' : ''}" onclick="switchRoom('${g.groupId}', '${g.groupName}', 'group', this)"><i class="fa-solid fa-hashtag"></i> ${g.groupName}</li>`; 
+      });
       list.innerHTML += '<div class="channel-title" style="margin-top:15px;">Direct Messages</div>';
       friends.forEach(f => {
         const dmId = `DM_${[currentUser, f].sort().join('_')}`;
-        // 检查该好友是否在 onlineUserArray 中
         const isOnline = onlineUserArray.includes(f);
-        list.innerHTML += `<li class="room-item ${isOnline ? 'is-online' : ''} ${currentRoom === dmId ? 'active' : ''}" onclick="switchRoom('${dmId}', '${f}', 'friend')"><i class="fa-solid fa-user"></i> ${f} <div class="online-dot"></div></li>`;
+        list.innerHTML += `<li class="room-item ${isOnline ? 'is-online' : ''} ${currentRoom === dmId ? 'active' : ''}" onclick="switchRoom('${dmId}', '${f}', 'friend', this)"><i class="fa-solid fa-user"></i> ${f} <div class="online-dot"></div></li>`;
       });
     }
 
     function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); }
 
-    window.switchRoom = function(roomId, displayName, type) {
+    // 【核心修复】：解决 iPad Safari 下 event 报错导致的无法切换问题，以及在头部增加 ID 显示功能
+    window.switchRoom = function(roomId, displayName, type, element) {
       currentRoom = roomId;
-      document.getElementById('current-room-name').innerHTML = type==='friend'?`<i class="fa-solid fa-user"></i> ${displayName}`:`<i class="fa-solid fa-hashtag"></i> ${displayName}`;
+      
+      // 在名字旁边显示真实的 Room ID，让 Admin 用户可以直观复制
+      document.getElementById('current-room-name').innerHTML = type==='friend'
+        ? `<i class="fa-solid fa-user" style="color:var(--text-muted)"></i> <span>${displayName}</span> <span style="font-size:12px; color:var(--text-muted); font-weight:normal; margin-left:8px;">ID: ${roomId}</span>`
+        : `<i class="fa-solid fa-hashtag" style="color:var(--text-muted)"></i> <span>${displayName}</span> <span style="font-size:12px; color:var(--text-muted); font-weight:normal; margin-left:8px;">ID: ${roomId}</span>`;
+      
       const actions = document.getElementById('room-actions');
       actions.innerHTML = `<button class="icon-btn danger" onclick="promptClearHistory('${roomId}')"><i class="fa-solid fa-trash-can"></i></button>`;
       if(type==='group' && roomId!=='General') actions.innerHTML += `<button class="icon-btn danger" onclick="promptLeaveGroup('${roomId}')"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>`;
       else if(type==='friend') actions.innerHTML += `<button class="icon-btn danger" onclick="promptDeleteFriend('${displayName}')"><i class="fa-solid fa-user-minus"></i></button>`;
       
       socket.emit('join room', roomId);
-      document.querySelectorAll('.room-item').forEach(el=>el.classList.remove('active')); event?.currentTarget?.classList.add('active');
+      
+      // 取消使用容易报错的 event.currentTarget，改为通过参数传递 element
+      document.querySelectorAll('.room-item').forEach(el=>el.classList.remove('active')); 
+      if (element) {
+        element.classList.add('active');
+      }
+
       if(window.innerWidth<=768) document.getElementById('sidebar').classList.remove('active');
     };
 
@@ -284,14 +290,10 @@
     window.promptJoinGroup = () => showModal({title:'加群', desc:'输入群号', onConfirm: id=>socket.emit('join group by id', {username:currentUser, groupId:id})});
     window.promptAddFriend = () => showModal({title:'加好友', desc:'精确用户名', onConfirm: n=>socket.emit('add friend', {username:currentUser, friendName:n})});
     window.promptLeaveGroup = (id) => showModal({title:'退群', desc:'确定退出？', showInput:false, confirmClass:'danger', onConfirm:()=>socket.emit('leave group', {username:currentUser, groupId:id})});
-    
-    // 安全操作保留密码锁
     window.promptDeleteFriend = (name) => showModal({title:'删好友', desc:'输入授权码继续(2437520)', inputType:'password', confirmClass:'danger', onConfirm:(v)=>{if(v==='2437520') socket.emit('delete friend', {username:currentUser, friendName:name}); else showToast('密码错误', 'error');}});
     window.promptClearHistory = (id) => showModal({title:'清空记录', desc:'核弹警告，输入授权码(2437520)', inputType:'password', confirmClass:'danger', onConfirm:(v)=>{if(v==='2437520') socket.emit('clear history', id); else showToast('密码错误', 'error');}});
 
-    // ==========================================
-    // 👑 上帝控制台前端逻辑
-    // ==========================================
+    // 上帝模式前端
     window.openAdminPanel = () => {
       document.getElementById('admin-dashboard').style.display = 'flex';
       socket.emit('admin fetch data', currentUser);
@@ -320,14 +322,8 @@
     });
 
     window.adminToggleBan = (targetUser, banStatus) => { socket.emit('admin toggle ban', { adminUser: currentUser, targetUser, banStatus }); setTimeout(openAdminPanel, 500); };
-    window.adminResetPwd = (targetUser) => {
-      const newPwd = prompt(`强制修改 ${targetUser} 的密码为：`);
-      if(newPwd) socket.emit('admin reset password', { adminUser: currentUser, targetUser, newPassword });
-    };
-    window.adminFetchRoom = () => {
-      const roomId = document.getElementById('admin-room-search').value;
-      if(roomId) socket.emit('admin fetch room history', { adminUser: currentUser, roomId });
-    };
+    window.adminResetPwd = (targetUser) => { const newPwd = prompt(`强制修改 ${targetUser} 的密码为：`); if(newPwd) socket.emit('admin reset password', { adminUser: currentUser, targetUser, newPassword }); };
+    window.adminFetchRoom = () => { const roomId = document.getElementById('admin-room-search').value; if(roomId) socket.emit('admin fetch room history', { adminUser: currentUser, roomId }); };
 
     socket.on('admin room history loaded', msgs => {
       const box = document.getElementById('admin-room-history');
@@ -339,7 +335,6 @@
       box.scrollTop = box.scrollHeight;
     });
 
-    // --- 聊天渲染逻辑 ---
     socket.on('history cleared', () => document.getElementById('messages').innerHTML = '<div style="text-align:center;color:red;font-size:12px;">记录已被彻底清空</div>');
     function getAvatarColor(name) { let h=0; for(let i=0;i<name.length;i++) h=name.charCodeAt(i)+((h<<5)-h); return `hsl(${h%360},65%,60%)`; }
 
@@ -347,6 +342,7 @@
       e.preventDefault(); const v = document.getElementById('input').value;
       if(v && currentRoom) { socket.emit('chat message', { room: currentRoom, sender: currentUser, text: v, msgType: 'text' }); document.getElementById('input').value = ''; }
     });
+    
     window.uploadImage = e => {
       const f = e.target.files[0]; if(!f) return;
       if(f.size>2*1024*1024) return showToast('图片不能超过2MB','error');
