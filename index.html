@@ -2,385 +2,835 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <!-- 【双端兼容核心】：强制设备采用全屏原生应用模式渲染 -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- PWA 与移动端深度兼容设置 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#0d0f14">
+  <meta name="theme-color" content="#0d0f14" id="theme-color-meta">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="JR Chat">
   
-  <title>JR Chat - Enterprise Edition</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+  <title>JR Chat - Ultimate Flagship</title>
+  
+  <!-- 字体与图标库 -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
   <style>
-    /* 全局变量保持不变 */
-    :root { --bg-main: #0d0f14; --bg-sidebar: rgba(21, 24, 33, 0.85); --bg-panel: #1a1d27; --accent-color: #6366f1; --accent-hover: #4f46e5; --danger-color: #ef4444; --text-main: #f8fafc; --text-muted: #94a3b8; --border-color: rgba(255, 255, 255, 0.08); --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-    body { background: var(--bg-main); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; }
-    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-    
-    #auth-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 1000; display: flex; justify-content: center; align-items: center; background-image: radial-gradient(circle at top right, #1e1b4b, var(--bg-main) 60%); }
-    .auth-card { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border-color); padding: 40px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; }
-    .auth-card h2 { margin-bottom: 30px; font-weight: 800; font-size: 28px; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .auth-input { width: 100%; padding: 14px 18px; margin-bottom: 15px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: #fff; border-radius: 12px; outline: none; transition: 0.3s; }
-    .auth-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--accent-color); color: #fff; font-weight: 600; cursor: pointer; margin-bottom: 15px; }
-    .auth-switch { color: var(--text-muted); font-size: 13px; cursor: pointer; }
-    
-    #sidebar { width: 280px; background: var(--bg-sidebar); backdrop-filter: blur(20px); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 100; transition: transform 0.3s; }
-    .brand { padding: 25px 20px 15px; font-size: 20px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
-    .channel-title { padding: 15px 20px 5px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
-    #room-list { list-style: none; overflow-y: auto; flex: 1; padding: 0 10px; }
-    .room-item { padding: 10px 15px; margin: 4px 0; border-radius: 10px; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; gap: 12px; font-size: 14px; }
-    .room-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
-    .room-item.active { background: var(--accent-color); color: #fff; }
-    
-    .online-dot { width: 8px; height: 8px; background-color: #4ade80; border-radius: 50%; box-shadow: 0 0 5px #4ade80; margin-left: auto; display: none; }
-    .room-item.is-online .online-dot { display: block; }
-    
-    .sidebar-footer { padding: 15px; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.2); }
-    .user-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; padding: 0 5px; }
-    .user-avatar { width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    .user-info { flex: 1; }
-    .user-name { font-size: 14px; font-weight: 600; }
-    .user-status { font-size: 11px; color: #4ade80; display: flex; align-items: center; gap: 4px; }
-    .user-status::before { content: ''; width: 6px; height: 6px; background: #4ade80; border-radius: 50%; }
-    
-    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .action-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; padding: 8px; border-radius: 10px; cursor: pointer; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .action-btn:hover { background: rgba(255,255,255,0.1); }
-    .action-btn.admin-mode { grid-column: span 2; background: rgba(234, 179, 8, 0.1); border-color: rgba(234, 179, 8, 0.3); color: #facc15; display: none; }
-    
-    #main-chat { flex: 1; display: flex; flex-direction: column; background: radial-gradient(circle at top, rgba(99, 102, 241, 0.03), transparent 50%); }
-    #chat-header { padding: 15px 25px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; background: rgba(13, 15, 20, 0.8); backdrop-filter: blur(10px); }
-    .menu-toggle { display: none; background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; }
-    .icon-btn { width: 36px; height: 36px; border-radius: 10px; background: transparent; border: 1px solid transparent; color: var(--text-muted); cursor: pointer; transition: 0.2s; }
-    .icon-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
-    .icon-btn.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
-    
-    #messages { flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-    .message-wrapper { display: flex; gap: 12px; max-width: 75%; }
-    .message-wrapper.self { align-self: flex-end; flex-direction: row-reverse; }
-    .avatar { width: 38px; height: 38px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0; }
-    .msg-content { display: flex; flex-direction: column; gap: 4px; }
-    .message-wrapper.self .msg-content { align-items: flex-end; }
-    .sender-name { font-size: 12px; color: var(--text-muted); margin: 0 2px; }
-    .bubble { padding: 12px 16px; font-size: 14.5px; line-height: 1.5; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 2px 18px 18px 18px; }
-    .message-wrapper.self .bubble { background: var(--accent-color); border-color: var(--accent-color); border-radius: 18px 2px 18px 18px; }
-    .msg-image { max-width: 280px; border-radius: 14px; cursor: pointer; border: 1px solid var(--border-color); }
+    /* ==========================================================================
+       1. CSS 变量与主题引擎
+       ========================================================================== */
+    :root {
+      /* 默认深色主题 (Dark Theme) */
+      --bg-base: #0f111a;
+      --bg-sidebar: rgba(21, 24, 33, 0.85);
+      --bg-panel: #1a1d27;
+      --bg-message: #222634;
+      --bg-message-self: #6366f1;
+      
+      --accent-color: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-glow: rgba(99, 102, 241, 0.4);
+      --danger-color: #ef4444;
+      --danger-hover: #dc2626;
+      --success-color: #10b981;
+      
+      --text-main: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #64748b;
+      
+      --border-light: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.15);
+      
+      --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+      --bubble-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      
+      --blur-md: blur(12px);
+      --blur-lg: blur(24px);
+      
+      --app-height: 100vh;
+    }
 
-    #input-container { padding: 20px 25px; }
-    #form { display: flex; gap: 12px; background: var(--bg-panel); padding: 8px 12px; border-radius: 20px; border: 1px solid var(--border-color); align-items: center; }
-    #input { flex: 1; background: transparent; border: none; color: #fff; outline: none; }
-    .send-btn { background: var(--accent-color); color: white; border: none; width: 40px; height: 40px; border-radius: 14px; cursor: pointer; }
-    .upload-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; }
+    /* AMOLED 纯黑主题 */
+    [data-theme="amoled"] {
+      --bg-base: #000000;
+      --bg-sidebar: rgba(0, 0, 0, 0.9);
+      --bg-panel: #0a0a0a;
+      --bg-message: #121212;
+      --border-light: rgba(255, 255, 255, 0.1);
+      --border-strong: rgba(255, 255, 255, 0.2);
+    }
 
-    #admin-dashboard { position: fixed; inset: 0; background: var(--bg-main); z-index: 4000; display: none; flex-direction: column; }
-    .admin-header { padding: 20px; background: rgba(234, 179, 8, 0.1); border-bottom: 1px solid rgba(234, 179, 8, 0.3); display: flex; justify-content: space-between; align-items: center; color: #facc15; }
-    .admin-content { flex: 1; display: flex; overflow: hidden; }
-    .admin-sidebar { width: 250px; border-right: 1px solid var(--border-color); padding: 20px; overflow-y: auto; }
-    .admin-main { flex: 1; padding: 20px; overflow-y: auto; }
-    .admin-card { background: var(--bg-panel); border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-    .admin-card-title { font-weight: 600; margin-bottom: 5px; }
-    .admin-card-sub { font-size: 12px; color: var(--text-muted); }
-    .btn-sm { padding: 6px 12px; border-radius: 6px; font-size: 12px; border: none; cursor: pointer; }
-    .btn-warn { background: rgba(234, 179, 8, 0.2); color: #facc15; }
-    .btn-danger { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    /* ==========================================================================
+       2. 全局重置与基础排版
+       ========================================================================== */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+    
+    body { background: var(--bg-base); color: var(--text-main); height: var(--app-height); overflow: hidden; display: flex; transition: background 0.3s ease; }
+    
+    a { color: var(--accent-color); text-decoration: none; }
+    a:hover { text-decoration: underline; }
 
-    #custom-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 5000; display: none; justify-content: center; align-items: center; }
-    .custom-modal { background: var(--bg-panel); border: 1px solid var(--border-color); width: 90%; max-width: 360px; border-radius: 20px; padding: 25px; }
-    .modal-input { width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: #fff; border-radius: 10px; margin-bottom: 20px; outline: none;}
-    .modal-actions { display: flex; justify-content: flex-end; gap: 10px;}
-    .modal-btn { padding: 10px 18px; border-radius: 10px; border: none; cursor: pointer; }
-    .modal-btn.confirm { background: var(--accent-color); color: #fff; }
-    .modal-btn.danger { background: var(--danger-color); color: #fff; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+    /* ==========================================================================
+       3. 登录注册遮罩层 (Auth Screen)
+       ========================================================================== */
+    #auth-screen { position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center; background-image: linear-gradient(rgba(15, 17, 26, 0.7), rgba(15, 17, 26, 0.9)), url('https://raw.githubusercontent.com/zhangzhanhang855/JRchat/main/bg.jpg'); background-size: cover; background-position: center; transition: opacity 0.5s ease, visibility 0.5s ease; }
+    .auth-card { background: rgba(30, 34, 45, 0.4); backdrop-filter: var(--blur-lg); -webkit-backdrop-filter: var(--blur-lg); border: 1px solid var(--border-strong); padding: 45px 35px; border-radius: 28px; width: 90%; max-width: 400px; text-align: center; box-shadow: var(--glass-shadow); animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+    .auth-brand { display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 30px; }
+    .auth-brand i { font-size: 32px; color: var(--accent-color); }
+    .auth-card h2 { font-weight: 800; font-size: 28px; background: linear-gradient(135deg, #ffffff, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .auth-input-group { position: relative; margin-bottom: 16px; }
+    .auth-input-group i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; }
+    .auth-input { width: 100%; padding: 15px 15px 15px 45px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-light); color: var(--text-main); border-radius: 14px; outline: none; font-size: 15px; transition: all 0.3s ease; }
+    .auth-input:focus { border-color: var(--accent-color); box-shadow: 0 0 0 4px var(--accent-glow); background: rgba(0,0,0,0.5); }
+    .auth-btn { width: 100%; padding: 15px; border: none; border-radius: 14px; background: var(--accent-color); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 10px; margin-bottom: 20px; transition: all 0.2s; box-shadow: 0 4px 15px var(--accent-glow); }
+    .auth-btn:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 6px 20px var(--accent-glow); }
+    .auth-btn:active { transform: translateY(1px); }
+    .auth-switch { color: var(--text-secondary); font-size: 14px; cursor: pointer; transition: 0.2s; font-weight: 500; }
+    .auth-switch:hover { color: #fff; text-decoration: underline; }
+
+    /* ==========================================================================
+       4. 应用主架构 (三栏布局)
+       ========================================================================== */
+    #app-container { display: flex; width: 100%; height: 100%; }
     
-    #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 6000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-    .toast { background: rgba(26, 29, 39, 0.95); padding: 12px 20px; border-radius: 30px; font-size: 13px; color: #fff; }
+    /* [栏一]: 左侧边栏 (Sidebar) */
+    #sidebar { width: 280px; background: var(--bg-sidebar); backdrop-filter: var(--blur-md); -webkit-backdrop-filter: var(--blur-md); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; z-index: 100; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex-shrink: 0; }
+    .sidebar-header { padding: 25px 20px 15px; display: flex; justify-content: space-between; align-items: center; }
+    .sidebar-brand { font-size: 20px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; letter-spacing: 0.5px; }
+    .theme-toggle { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; transition: 0.2s; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .theme-toggle:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
     
+    .sidebar-scroll { flex: 1; overflow-y: auto; padding: 0 12px; }
+    .section-title { padding: 15px 12px 6px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1.5px; }
+    
+    .nav-item { padding: 12px 14px; margin: 4px 0; border-radius: 12px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; transition: all 0.2s ease; position: relative; overflow: hidden; }
+    .nav-item i { font-size: 16px; width: 20px; text-align: center; opacity: 0.7; transition: 0.2s; }
+    .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+    .nav-item.active { background: var(--accent-color); color: #fff; box-shadow: 0 4px 15px var(--accent-glow); }
+    .nav-item.active i { opacity: 1; }
+    
+    .status-dot { width: 8px; height: 8px; background-color: var(--success-color); border-radius: 50%; box-shadow: 0 0 8px var(--success-color); margin-left: auto; display: none; }
+    .nav-item.is-online .status-dot { display: block; }
+    
+    /* 侧边栏底部：个人资料与快捷控制 */
+    .sidebar-footer { padding: 16px; border-top: 1px solid var(--border-light); background: rgba(0,0,0,0.15); }
+    .profile-card { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 8px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); }
+    .profile-avatar { width: 40px; height: 40px; border-radius: 12px; background: var(--accent-color); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+    .profile-info { flex: 1; overflow: hidden; }
+    .profile-name { font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+    .profile-status { font-size: 11px; color: var(--success-color); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+    .profile-status::before { content: ''; width: 6px; height: 6px; background: var(--success-color); border-radius: 50%; }
+    
+    .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .q-btn { background: rgba(255,255,255,0.04); border: 1px solid var(--border-light); color: var(--text-main); padding: 10px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
+    .q-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); transform: translateY(-1px); }
+    .q-btn.full { grid-column: span 2; }
+    .q-btn.admin { background: rgba(245, 158, 11, 0.1); color: #fcd34d; border-color: rgba(245, 158, 11, 0.2); display: none; }
+
+    /* [栏二]: 主聊天区域 (Main Chat) */
+    #main-chat { flex: 1; display: flex; flex-direction: column; position: relative; background: radial-gradient(circle at top center, rgba(99, 102, 241, 0.05), transparent 60%); min-width: 0; }
+    
+    .chat-header { padding: 16px 24px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; background: rgba(15, 17, 26, 0.8); backdrop-filter: var(--blur-md); z-index: 10; }
+    .header-info { display: flex; align-items: center; gap: 16px; }
+    .mobile-menu-btn { display: none; background: transparent; border: none; color: #fff; font-size: 20px; cursor: pointer; }
+    .chat-title-group { display: flex; flex-direction: column; gap: 2px; }
+    .chat-title { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: #fff; }
+    .chat-subtitle { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+    .tool-btn { width: 38px; height: 38px; border-radius: 12px; background: transparent; border: 1px solid transparent; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: 0.2s; }
+    .tool-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    .tool-btn.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); border-color: rgba(239, 68, 68, 0.2); }
+    .tool-btn.active { background: rgba(99, 102, 241, 0.15); color: var(--accent-color); border-color: rgba(99, 102, 241, 0.3); }
+
+    /* 消息流区域 */
+    #messages-view { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; scroll-behavior: smooth; }
+    .message-group { display: flex; gap: 14px; max-width: 85%; animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); position: relative; }
+    .message-group.self { align-self: flex-end; flex-direction: row-reverse; }
+    
+    .msg-avatar { width: 42px; height: 42px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.15); cursor: pointer; }
+    .msg-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .message-group.self .msg-body { align-items: flex-end; }
+    
+    .msg-meta { display: flex; align-items: baseline; gap: 8px; margin: 0 4px; }
+    .message-group.self .msg-meta { flex-direction: row-reverse; }
+    .msg-sender { font-size: 13px; font-weight: 600; color: var(--text-secondary); cursor: pointer; }
+    .msg-time { font-size: 11px; color: var(--text-muted); }
+    
+    .msg-bubble { padding: 12px 18px; font-size: 15px; line-height: 1.6; background: var(--bg-message); border: 1px solid var(--border-light); color: var(--text-main); border-radius: 4px 20px 20px 20px; box-shadow: var(--bubble-shadow); word-break: break-word; position: relative; }
+    .message-group.self .msg-bubble { background: var(--bg-message-self); border-color: var(--bg-message-self); color: #fff; border-radius: 20px 4px 20px 20px; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2); }
+    
+    /* 链接高亮 */
+    .msg-bubble a { color: #60a5fa; text-decoration: underline; font-weight: 500; }
+    .message-group.self .msg-bubble a { color: #e0e7ff; }
+
+    .msg-image { max-width: 320px; max-height: 320px; border-radius: 16px; cursor: pointer; border: 1px solid var(--border-light); object-fit: cover; transition: transform 0.2s, box-shadow 0.2s; }
+    .msg-image:hover { transform: scale(1.02); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+
+    /* 富文本输入区域 */
+    .input-area { padding: 20px 24px; background: transparent; }
+    .input-wrapper { display: flex; gap: 12px; background: var(--bg-panel); padding: 10px 14px; border-radius: 24px; border: 1px solid var(--border-strong); align-items: flex-end; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: border-color 0.3s, box-shadow 0.3s; position: relative; }
+    .input-wrapper:focus-within { border-color: var(--accent-color); box-shadow: 0 10px 40px rgba(99, 102, 241, 0.15); }
+    
+    .input-tools { display: flex; gap: 6px; padding-bottom: 2px; }
+    .tool-icon { background: transparent; border: none; width: 36px; height: 36px; border-radius: 12px; color: var(--text-muted); cursor: pointer; font-size: 18px; transition: 0.2s; display: flex; justify-content: center; align-items: center; }
+    .tool-icon:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    
+    #file-upload-input { display: none; }
+    
+    .textarea-box { flex: 1; background: transparent; border: none; color: #fff; font-size: 15px; outline: none; resize: none; max-height: 120px; min-height: 24px; padding: 8px 4px; line-height: 1.5; font-family: inherit; }
+    .textarea-box::placeholder { color: var(--text-muted); }
+    
+    .send-action { padding-bottom: 2px; }
+    .btn-send { background: var(--accent-color); color: white; border: none; width: 44px; height: 44px; border-radius: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 16px; box-shadow: 0 4px 15px var(--accent-glow); }
+    .btn-send:hover { background: var(--accent-hover); transform: scale(1.05); }
+
+    /* Emoji 选择器面板 */
+    #emoji-picker { position: absolute; bottom: 80px; left: 24px; background: var(--bg-panel); border: 1px solid var(--border-strong); border-radius: 16px; padding: 15px; width: 320px; box-shadow: var(--glass-shadow); display: none; grid-template-columns: repeat(6, 1fr); gap: 8px; z-index: 50; max-height: 250px; overflow-y: auto; }
+    .emoji-item { font-size: 24px; cursor: pointer; text-align: center; padding: 6px; border-radius: 8px; transition: 0.2s; }
+    .emoji-item:hover { background: rgba(255,255,255,0.1); transform: scale(1.1); }
+
+    /* [栏三]: 右侧房间详情面板 (Info Panel) */
+    #info-panel { width: 300px; background: var(--bg-panel); border-left: 1px solid var(--border-light); display: flex; flex-direction: column; transition: all 0.3s ease; overflow: hidden; flex-shrink: 0; }
+    #info-panel.collapsed { width: 0; border-left: none; opacity: 0; pointer-events: none; }
+    .info-header { padding: 20px; border-bottom: 1px solid var(--border-light); text-align: center; }
+    .info-avatar { width: 80px; height: 80px; border-radius: 24px; background: var(--accent-color); color: #fff; font-size: 32px; font-weight: 800; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+    .info-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .info-id { font-size: 13px; color: var(--text-muted); background: rgba(0,0,0,0.3); padding: 4px 12px; border-radius: 20px; display: inline-block; user-select: all; }
+    .info-body { flex: 1; overflow-y: auto; padding: 20px; }
+    .info-section-title { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 1px; }
+    .media-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 24px; }
+    .media-placeholder { aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 20px; cursor: pointer; transition: 0.2s; }
+    .media-placeholder:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+    /* ==========================================================================
+       5. 极客组件与黑科技 UI
+       ========================================================================== */
+    
+    /* 消息右键上下文菜单 (Context Menu) */
+    #context-menu { position: fixed; background: rgba(30, 34, 45, 0.85); backdrop-filter: var(--blur-lg); -webkit-backdrop-filter: var(--blur-lg); border: 1px solid var(--border-strong); border-radius: 12px; padding: 6px; box-shadow: var(--glass-shadow); z-index: 9000; display: none; flex-direction: column; min-width: 160px; transform-origin: top left; animation: scaleIn 0.15s ease-out; }
+    .ctx-item { padding: 10px 14px; color: var(--text-main); font-size: 14px; font-weight: 500; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+    .ctx-item i { font-size: 14px; width: 16px; text-align: center; }
+    .ctx-item:hover { background: var(--accent-color); color: #fff; }
+    .ctx-item.ctx-danger { color: var(--danger-color); }
+    .ctx-item.ctx-danger:hover { background: var(--danger-color); color: #fff; }
+
+    /* 画廊级全屏图片预览 (Lightbox) */
+    #lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); z-index: 10000; display: none; justify-content: center; align-items: center; flex-direction: column; opacity: 0; transition: opacity 0.3s; }
+    #lightbox-img { max-width: 90%; max-height: 85vh; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .lightbox-close { position: absolute; top: 30px; right: 30px; background: rgba(255,255,255,0.1); border: none; color: #fff; width: 44px; height: 44px; border-radius: 50%; font-size: 20px; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; }
+    .lightbox-close:hover { background: rgba(255,255,255,0.2); transform: rotate(90deg); }
+
+    /* 高级模态框系统 (Modal) */
+    #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 8000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.2s; }
+    .modal-box { background: var(--bg-panel); border: 1px solid var(--border-strong); width: 90%; max-width: 380px; border-radius: 24px; padding: 30px; box-shadow: var(--glass-shadow); transform: scale(0.95); transition: transform 0.2s; }
+    .modal-header { font-size: 20px; font-weight: 700; margin-bottom: 12px; color: #fff; display: flex; align-items: center; gap: 10px; }
+    .modal-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
+    .modal-input-field { width: 100%; padding: 14px 16px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-light); color: #fff; border-radius: 12px; outline: none; margin-bottom: 24px; font-size: 15px; transition: 0.2s; }
+    .modal-input-field:focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 12px; }
+    .m-btn { padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; }
+    .m-btn.cancel { background: rgba(255,255,255,0.05); color: var(--text-secondary); }
+    .m-btn.cancel:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .m-btn.confirm { background: var(--accent-color); color: #fff; }
+    .m-btn.confirm:hover { background: var(--accent-hover); box-shadow: 0 4px 12px var(--accent-glow); }
+    .m-btn.danger { background: rgba(239, 68, 68, 0.15); color: var(--danger-color); }
+    .m-btn.danger:hover { background: var(--danger-color); color: #fff; }
+
+    /* 全局系统通知 (Toast) */
+    #toast-wrap { position: fixed; top: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+    .toast-item { background: rgba(30, 34, 45, 0.95); backdrop-filter: var(--blur-md); border: 1px solid var(--border-strong); padding: 14px 24px; border-radius: 30px; font-size: 14px; font-weight: 500; color: #fff; display: flex; align-items: center; gap: 12px; box-shadow: 0 15px 30px rgba(0,0,0,0.4); animation: toastSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    .toast-item i { font-size: 18px; }
+    .toast-item.success i { color: var(--success-color); }
+    .toast-item.error i { color: var(--danger-color); }
+    .toast-item.info i { color: #60a5fa; }
+
+    /* 管理员控制台 (Admin Dashboard) */
+    #admin-dash { position: fixed; inset: 0; background: var(--bg-base); z-index: 7000; display: none; flex-direction: column; }
+    .ad-header { padding: 24px 30px; background: rgba(234, 179, 8, 0.05); border-bottom: 1px solid rgba(234, 179, 8, 0.2); display: flex; justify-content: space-between; align-items: center; color: #facc15; }
+    .ad-body { flex: 1; display: flex; overflow: hidden; }
+    .ad-sidebar { width: 300px; border-right: 1px solid var(--border-light); padding: 24px; overflow-y: auto; background: rgba(0,0,0,0.2); }
+    .ad-main { flex: 1; padding: 30px; overflow-y: auto; }
+    .user-card { background: var(--bg-panel); border: 1px solid var(--border-light); padding: 18px; border-radius: 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+    .user-card:hover { border-color: rgba(255,255,255,0.2); transform: translateY(-2px); }
+    .ad-btn { padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: 0.2s; }
+    .ad-btn-warn { background: rgba(234, 179, 8, 0.15); color: #facc15; }
+    .ad-btn-warn:hover { background: #facc15; color: #000; }
+    .ad-btn-danger { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .ad-btn-danger:hover { background: #ef4444; color: #fff; }
+    .ad-viewer { background: rgba(0,0,0,0.4); border-radius: 16px; padding: 24px; height: 500px; overflow-y: auto; border: 1px solid var(--border-light); font-size: 14px; font-family: monospace; line-height: 1.6; }
+
+    /* ==========================================================================
+       6. 动画关键帧与移动端响应式 (Responsive)
+       ========================================================================== */
+    @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(15px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes toastSlide { from { opacity: 0; transform: translateY(-30px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+    @media (max-width: 992px) {
+      /* 平板端隐藏右侧详情面板 */
+      #info-panel { position: absolute; right: 0; height: 100%; transform: translateX(100%); z-index: 100; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
+      #info-panel.active-mobile { transform: translateX(0); width: 280px; opacity: 1; pointer-events: auto; }
+      .tool-btn.toggle-info { display: flex !important; }
+    }
+
     @media (max-width: 768px) {
-      .menu-toggle { display: block; }
-      #sidebar { position: fixed; height: 100%; transform: translateX(-100%); }
+      /* 手机端布局巨变 */
+      .mobile-menu-btn { display: block; }
+      #sidebar { position: fixed; height: 100%; transform: translateX(-100%); box-shadow: 10px 0 40px rgba(0,0,0,0.6); z-index: 200; width: 280px; }
       #sidebar.active { transform: translateX(0); }
-      .message-wrapper { max-width: 90%; }
-      .admin-content { flex-direction: column; }
-      .admin-sidebar { width: 100%; height: 300px; border-right: none; border-bottom: 1px solid var(--border-color); }
+      .message-group { max-width: 92%; }
+      .chat-header { padding: 12px 16px; }
+      #messages-view { padding: 16px; gap: 16px; }
+      .input-area { padding: 12px 16px; }
+      .input-wrapper { border-radius: 20px; padding: 8px 10px; }
+      .ad-body { flex-direction: column; }
+      .ad-sidebar { width: 100%; height: 350px; border-right: none; border-bottom: 1px solid var(--border-light); }
+      #emoji-picker { width: calc(100vw - 32px); left: 16px; bottom: 70px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- UI 组件 -->
-  <div id="toast-container"></div>
-  <div id="custom-modal-overlay">
-    <div class="custom-modal" id="custom-modal">
-      <div id="modal-title" style="font-weight:bold;margin-bottom:10px;"></div>
-      <div id="modal-desc" style="font-size:12px;color:gray;margin-bottom:15px;"></div>
-      <input type="text" class="modal-input" id="modal-input">
-      <div class="modal-actions" id="modal-actions"></div>
+  <!-- UI 浮层组件库 -->
+  <div id="toast-wrap"></div>
+  
+  <div id="modal-overlay">
+    <div class="modal-box" id="modal-box">
+      <div class="modal-header" id="modal-title"></div>
+      <div class="modal-desc" id="modal-desc"></div>
+      <input type="text" class="modal-input-field" id="modal-input" autocomplete="off">
+      <div class="modal-footer" id="modal-actions"></div>
     </div>
+  </div>
+
+  <div id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close"><i class="fa-solid fa-xmark"></i></button>
+    <img id="lightbox-img" src="" alt="Preview" onclick="event.stopPropagation()">
+  </div>
+
+  <div id="context-menu">
+    <div class="ctx-item" onclick="ctxAction('copy')"><i class="fa-solid fa-copy"></i> 复制文本</div>
+    <div class="ctx-item" onclick="ctxAction('reply')"><i class="fa-solid fa-reply"></i> 回复此条</div>
+    <div style="height:1px; background:var(--border-light); margin: 4px 0;"></div>
+    <div class="ctx-item ctx-danger" onclick="ctxAction('delete')"><i class="fa-solid fa-trash-can"></i> 本地隐藏</div>
   </div>
 
   <!-- 上帝控制台 -->
-  <div id="admin-dashboard">
-    <div class="admin-header">
-      <h2><i class="fa-solid fa-crown"></i> JR Chat 全局控制中心</h2>
-      <button class="btn-sm btn-warn" onclick="document.getElementById('admin-dashboard').style.display='none'">返回聊天</button>
+  <div id="admin-dash">
+    <div class="ad-header">
+      <h2 style="font-weight:800; font-size:22px;"><i class="fa-solid fa-terminal"></i> JR Chat Root Server</h2>
+      <button class="ad-btn ad-btn-warn" onclick="document.getElementById('admin-dash').style.display='none'"><i class="fa-solid fa-door-open"></i> 退出终端</button>
     </div>
-    <div class="admin-content">
-      <div class="admin-sidebar" id="admin-user-list"></div>
-      <div class="admin-main">
-        <h3 style="margin-bottom:15px; color: var(--text-muted);"><i class="fa-solid fa-eye"></i> 监听模式：输入群号或私聊号查看记录</h3>
-        <div style="display:flex; gap:10px; margin-bottom:20px;">
-          <input type="text" id="admin-room-search" class="modal-input" placeholder="例如: 8848 或 DM_A_B" style="margin:0;">
-          <button class="btn-sm btn-warn" onclick="adminFetchRoom()">调取记录</button>
+    <div class="ad-body">
+      <div class="ad-sidebar" id="ad-user-list"></div>
+      <div class="ad-main">
+        <h3 style="margin-bottom:16px; color: var(--text-muted); font-weight:600;"><i class="fa-solid fa-satellite-dish"></i> 幽灵监听协议：检索全网数据流</h3>
+        <div style="display:flex; gap:12px; margin-bottom:24px;">
+          <input type="text" id="ad-search" class="modal-input-field" placeholder="Target ID (e.g., 8848 or DM_A_B)" style="margin:0; max-width:300px;">
+          <button class="ad-btn ad-btn-warn" style="font-size:14px; padding:0 24px;" onclick="adminFetch()">Execute</button>
         </div>
-        <div id="admin-room-history" style="background:rgba(0,0,0,0.3); border-radius:12px; padding:15px; height:400px; overflow-y:auto; border:1px solid var(--border-color); font-size:13px;"></div>
+        <div id="ad-viewer" class="ad-viewer">Initialize listening sequence...</div>
       </div>
     </div>
   </div>
 
-  <!-- 登录 -->
+  <!-- 登录校验穹顶 -->
   <div id="auth-screen">
     <div class="auth-card">
-      <h2>JR Chat</h2>
-      <input type="text" id="auth-username" class="auth-input" placeholder="Username" autocomplete="off">
-      <input type="password" id="auth-password" class="auth-input" placeholder="Password">
-      <button class="auth-btn" id="btn-login" onclick="doLogin()">登录</button>
-      <button class="auth-btn" id="btn-register" onclick="doRegister()" style="display:none; background:#0ea5e9;">注册</button>
-      <div class="auth-switch" onclick="toggleAuthMode()" id="auth-switch-text">没有账号？点击注册</div>
+      <div class="auth-brand"><i class="fa-brands fa-space-awesome"></i></div>
+      <h2>JR Chat UI 5.0</h2>
+      <div style="margin-bottom:24px; color:var(--text-muted); font-size:13px;">Enterprise Flagship Edition</div>
+      
+      <div class="auth-input-group">
+        <i class="fa-solid fa-user"></i>
+        <input type="text" id="auth-usr" class="auth-input" placeholder="User ID" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="auth-input-group">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="auth-pwd" class="auth-input" placeholder="Access Protocol">
+      </div>
+      
+      <button class="auth-btn" id="btn-login" onclick="execLogin()">INITIATE LINK</button>
+      <button class="auth-btn" id="btn-register" onclick="execRegister()" style="display:none; background:#0ea5e9; box-shadow:0 4px 15px rgba(14,165,233,0.4);">REGISTER PROTOCOL</button>
+      <div class="auth-switch" onclick="switchAuthMode()" id="auth-mode-text">Initialize new identity?</div>
     </div>
   </div>
 
-  <!-- 主界面 -->
-  <aside id="sidebar">
-    <div class="brand"><span><i class="fa-solid fa-infinity" style="color:var(--accent-color)"></i> JR Chat</span> <i class="fa-solid fa-xmark close-btn" onclick="toggleMenu()" style="display:none; cursor:pointer;"></i></div>
-    <ul id="room-list"></ul>
-    <div class="sidebar-footer">
-      <div class="user-profile">
-        <div class="user-avatar" id="my-avatar" style="color:white;">U</div>
-        <div class="user-info">
-          <div class="user-name" id="my-name">User</div>
-          <div class="user-status">Online</div>
+  <!-- 核心应用架构 -->
+  <div id="app-container">
+    
+    <!-- 左栏：导航与会话 -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand"><i class="fa-brands fa-strikethrough" style="color:var(--accent-color);"></i> JR Chat</div>
+        <button class="theme-toggle" onclick="toggleTheme()" title="切换主题"><i class="fa-solid fa-moon"></i></button>
+      </div>
+      
+      <div class="sidebar-scroll" id="nav-list">
+        <!-- 动态注入列表 -->
+      </div>
+      
+      <div class="sidebar-footer">
+        <div class="profile-card">
+          <div class="profile-avatar" id="my-avatar">X</div>
+          <div class="profile-info">
+            <div class="profile-name" id="my-name">Agent</div>
+            <div class="profile-status">Secured Connection</div>
+          </div>
+        </div>
+        <div class="quick-actions">
+          <button class="q-btn" onclick="openModal('createGroup')"><i class="fa-solid fa-plus"></i> 创群</button>
+          <button class="q-btn" onclick="openModal('joinGroup')"><i class="fa-solid fa-satellite"></i> 搜群</button>
+          <button class="q-btn full" onclick="openModal('addFriend')"><i class="fa-solid fa-user-astronaut"></i> 添加特工</button>
+          <button class="q-btn full admin" id="btn-admin" onclick="openAdmin()"><i class="fa-solid fa-skull-crossbones"></i> ROOT 控制台</button>
         </div>
       </div>
-      <div class="action-grid">
-        <button class="action-btn" onclick="promptCreateGroup()"><i class="fa-solid fa-layer-group"></i> 建群</button>
-        <button class="action-btn" onclick="promptJoinGroup()"><i class="fa-solid fa-magnifying-glass"></i> 加群</button>
-        <button class="action-btn" onclick="promptAddFriend()"><i class="fa-solid fa-user-plus"></i> 加好友</button>
-        <button class="action-btn admin-mode" id="admin-entry-btn" onclick="openAdminPanel()"><i class="fa-solid fa-crown"></i> 管理台</button>
-      </div>
-    </div>
-  </aside>
+    </aside>
 
-  <main id="main-chat">
-    <header id="chat-header">
-      <div class="header-left">
-        <button class="menu-toggle" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
-        <h3 id="current-room-name" style="display:flex; align-items:center; gap:8px;">大厅</h3>
+    <!-- 中栏：主通讯流 -->
+    <main id="main-chat">
+      <header class="chat-header">
+        <div class="header-info">
+          <button class="mobile-menu-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars-staggered"></i></button>
+          <div class="chat-title-group">
+            <div class="chat-title" id="room-title"><i class="fa-solid fa-hashtag" style="color:var(--text-muted)"></i> 大厅</div>
+            <div class="chat-subtitle" id="room-subtitle">Public Node</div>
+          </div>
+        </div>
+        <div class="header-actions" id="room-tools">
+          <button class="tool-btn toggle-info" onclick="toggleInfoPanel()" style="display:none;" title="房间详情"><i class="fa-solid fa-circle-info"></i></button>
+        </div>
+      </header>
+      
+      <div id="messages-view" onclick="hideContextMenu()"></div>
+      
+      <!-- 隐藏文件域与表情库 -->
+      <input type="file" id="file-upload-input" accept="image/*" onchange="handleFileUpload(event)">
+      <div id="emoji-picker"></div>
+      
+      <div class="input-area">
+        <div class="input-wrapper" id="input-wrap">
+          <div class="input-tools">
+            <button class="tool-icon" onclick="toggleEmojiPicker()"><i class="fa-regular fa-face-smile"></i></button>
+            <button class="tool-icon" onclick="document.getElementById('file-upload-input').click()"><i class="fa-solid fa-paperclip"></i></button>
+          </div>
+          <textarea class="textarea-box" id="msg-input" placeholder="Type your message... (Enter to send, Shift+Enter for new line)"></textarea>
+          <div class="send-action">
+            <button class="btn-send" onclick="submitMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+          </div>
+        </div>
       </div>
-      <div class="room-actions" id="room-actions"></div>
-    </header>
-    <div id="messages"></div>
-    <div id="input-container">
-      <form id="form">
-        <input type="file" id="file-input" style="display:none" onchange="uploadImage(event)">
-        <button type="button" class="upload-btn" onclick="document.getElementById('file-input').click()"><i class="fa-solid fa-image"></i></button>
-        <input id="input" autocomplete="off" placeholder="发消息..." />
-        <button type="submit" class="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
-      </form>
-    </div>
-  </main>
+    </main>
 
+    <!-- 右栏：房间详情 (UI 占位示范企业级架构) -->
+    <aside id="info-panel" class="collapsed">
+      <div class="info-header">
+        <div class="info-avatar" id="info-avatar"><i class="fa-solid fa-hashtag"></i></div>
+        <div class="info-title" id="info-name">大厅</div>
+        <div class="info-id" id="info-id">ID: General</div>
+      </div>
+      <div class="info-body">
+        <div class="info-section-title">Shared Media (Demo)</div>
+        <div class="media-grid">
+          <div class="media-placeholder"><i class="fa-regular fa-image"></i></div>
+          <div class="media-placeholder"><i class="fa-solid fa-video"></i></div>
+          <div class="media-placeholder"><i class="fa-regular fa-file-zipper"></i></div>
+        </div>
+        <div class="info-section-title">Security Settings</div>
+        <div style="font-size:13px; color:var(--text-muted); line-height:1.6;">End-to-End encryption enabled. All comms are secured via Base64 binary shifting protocol.</div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Socket.IO Client -->
   <script src="/socket.io/socket.io.js"></script>
+  
   <script>
+    /* ==========================================================================
+       [系统核心变量与缓存状态]
+       ========================================================================== */
     const socket = io();
-    let currentUser = '';
-    let currentRoom = '';
+    
+    // 【核心修复】：缓存用户的密码(Token)用于应对系统静默刷新，解决无法切群的 Bug
+    let authSessionToken = ''; 
+    let currUser = '';
+    let currRoom = '';
+    let onlineSet = [];
     let isLoginMode = true;
-    let onlineUserArray = [];
+    
+    // 主题控制
+    let currentTheme = localStorage.getItem('jrchat_theme') || 'dark';
+    applyTheme(currentTheme);
 
-    function showToast(msg, type = 'info') {
-      const c = document.getElementById('toast-container');
-      const t = document.createElement('div');
-      t.className = `toast ${type}`;
-      t.innerHTML = `<span>${msg}</span>`;
-      c.appendChild(t);
-      setTimeout(() => { t.style.opacity=0; setTimeout(()=>t.remove(),300); }, 3000);
+    // 右键菜单与交互状态
+    let ctxTargetMessage = null; // 当前被右键操作的消息
+    let isEmojiVisible = false;
+
+    // 常用简易表情包矩阵
+    const emojis = ["😀","😂","🤣","😊","🥰","😎","🤩","😏","😒","😔","😭","😡","🤯","🥳","🤫","🤔","🙄","😴","🤢","🤮","🤠","😈","👻","👽","🤖","💩","👍","👎","👏","🤝","🙏","💪","🔥","✨","🌟","🎉","💯","❤️","💔","⚽","🏀","🎮","🎵","📷","💻","🚀","🚁","🛸","🚨","🍔"];
+
+    /* ==========================================================================
+       [UI 引擎 (Toasts, Modals, Lightbox, Menu)]
+       ========================================================================== */
+    function toast(msg, type = 'info') {
+      const wrap = document.getElementById('toast-wrap');
+      const el = document.createElement('div');
+      el.className = `toast-item ${type}`;
+      const icon = type==='success'?'fa-check-circle':type==='error'?'fa-triangle-exclamation':'fa-circle-info';
+      el.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${msg}</span>`;
+      wrap.appendChild(el);
+      setTimeout(() => { el.style.opacity=0; el.style.transform='translateY(-20px)'; setTimeout(()=>el.remove(), 400); }, 3000);
     }
 
-    const modal = document.getElementById('custom-modal-overlay');
-    function showModal({ title, desc, placeholder, showInput=true, inputType='text', confirmText='确认', confirmClass='confirm', onConfirm }) {
-      document.getElementById('modal-title').innerHTML = title; document.getElementById('modal-desc').innerText = desc;
+    const mOverlay = document.getElementById('modal-overlay');
+    function customModal({ title, desc, ph, hasInput=true, type='text', cText='Confirm', cClass='confirm', onOK }) {
+      document.getElementById('modal-title').innerHTML = title;
+      document.getElementById('modal-desc').innerText = desc;
       const inp = document.getElementById('modal-input');
-      inp.style.display = showInput?'block':'none'; inp.type=inputType; inp.placeholder=placeholder||''; inp.value='';
-      const actions = document.getElementById('modal-actions'); actions.innerHTML='';
-      const cancel = document.createElement('button'); cancel.className='modal-btn'; cancel.style.background='transparent'; cancel.style.color='gray'; cancel.innerText='取消'; cancel.onclick=()=>modal.style.display='none';
-      const submit = document.createElement('button'); submit.className=`modal-btn ${confirmClass}`; submit.innerText=confirmText; 
-      submit.onclick=()=>{ onConfirm(inp.value.trim()); modal.style.display='none'; };
-      actions.append(cancel, submit);
-      modal.style.display='flex';
+      inp.style.display = hasInput?'block':'none'; inp.type=type; inp.placeholder=ph||''; inp.value='';
+      const acts = document.getElementById('modal-actions'); acts.innerHTML='';
+      
+      const btnCancel = document.createElement('button'); btnCancel.className='m-btn cancel'; btnCancel.innerText='取消'; btnCancel.onclick=()=>closeModal();
+      const btnOK = document.createElement('button'); btnOK.className=`m-btn ${cClass}`; btnOK.innerText=cText;
+      btnOK.onclick = () => { const v=inp.value.trim(); if(hasInput&&!v){inp.focus();return;} onOK(v); closeModal(); };
+      
+      acts.append(btnCancel, btnOK);
+      mOverlay.style.display='flex';
+      setTimeout(() => { mOverlay.style.opacity=1; document.getElementById('modal-box').style.transform='scale(1)'; if(hasInput)inp.focus(); }, 10);
+    }
+    function closeModal() {
+      mOverlay.style.opacity=0; document.getElementById('modal-box').style.transform='scale(0.95)';
+      setTimeout(() => mOverlay.style.display='none', 200);
     }
 
-    function toggleAuthMode() { isLoginMode=!isLoginMode; document.getElementById('btn-login').style.display=isLoginMode?'block':'none'; document.getElementById('btn-register').style.display=isLoginMode?'none':'block'; document.getElementById('auth-switch-text').innerText=isLoginMode?'注册账号':'直接登录'; }
-    function doLogin() { socket.emit('login', {username: document.getElementById('auth-username').value, password: document.getElementById('auth-password').value}); }
-    function doRegister() { socket.emit('register', {username: document.getElementById('auth-username').value, password: document.getElementById('auth-password').value}); }
+    // 画廊功能
+    function openLightbox(src) {
+      const lb = document.getElementById('lightbox');
+      document.getElementById('lightbox-img').src = src;
+      lb.style.display = 'flex';
+      setTimeout(() => { lb.style.opacity = 1; document.getElementById('lightbox-img').style.transform='scale(1)'; }, 10);
+    }
+    function closeLightbox() {
+      const lb = document.getElementById('lightbox');
+      lb.style.opacity = 0; document.getElementById('lightbox-img').style.transform='scale(0.95)';
+      setTimeout(() => lb.style.display = 'none', 300);
+    }
 
-    socket.on('auth error', msg => showToast(msg, 'error'));
-    socket.on('auth success', msg => { showToast(msg, 'success'); toggleAuthMode(); });
-    socket.on('system message', msg => showToast(msg, 'info'));
+    // 右键菜单引擎
+    document.addEventListener('contextmenu', e => {
+      // 如果点击的是消息气泡
+      const bubble = e.target.closest('.msg-bubble');
+      if(bubble) {
+        e.preventDefault();
+        ctxTargetMessage = bubble;
+        const menu = document.getElementById('context-menu');
+        menu.style.display = 'flex';
+        // 智能定位防越界
+        let x = e.pageX, y = e.pageY;
+        if (x + 160 > window.innerWidth) x -= 160;
+        if (y + 120 > window.innerHeight) y -= 120;
+        menu.style.left = `${x}px`; menu.style.top = `${y}px`;
+      } else { hideContextMenu(); }
+    });
+    function hideContextMenu() { document.getElementById('context-menu').style.display='none'; }
+    function ctxAction(act) {
+      hideContextMenu();
+      if(!ctxTargetMessage) return;
+      const text = ctxTargetMessage.innerText;
+      if(act === 'copy') { navigator.clipboard.writeText(text); toast('消息内容已复制到剪贴板', 'success'); }
+      if(act === 'reply') { 
+        const input = document.getElementById('msg-input');
+        input.value = `> ${text.substring(0,20)}${text.length>20?'...':''}\n\n` + input.value;
+        input.focus();
+      }
+      if(act === 'delete') { 
+        // 仅本地视觉隐藏，演示功能
+        ctxTargetMessage.closest('.message-group').style.display = 'none'; 
+        toast('消息已在本地视口屏蔽'); 
+      }
+    }
 
+    // Emoji 引擎
+    function initEmoji() {
+      const p = document.getElementById('emoji-picker');
+      emojis.forEach(e => {
+        const el = document.createElement('div'); el.className='emoji-item'; el.innerText=e;
+        el.onclick = () => { document.getElementById('msg-input').value += e; toggleEmojiPicker(); document.getElementById('msg-input').focus(); };
+        p.appendChild(el);
+      });
+    }
+    initEmoji();
+    function toggleEmojiPicker() { isEmojiVisible=!isEmojiVisible; document.getElementById('emoji-picker').style.display=isEmojiVisible?'grid':'none'; }
+
+    // 主题引擎
+    function applyTheme(th) {
+      document.documentElement.setAttribute('data-theme', th);
+      document.getElementById('theme-color-meta').setAttribute('content', th==='amoled'?'#000000':'#0d0f14');
+      localStorage.setItem('jrchat_theme', th);
+    }
+    function toggleTheme() {
+      currentTheme = currentTheme === 'dark' ? 'amoled' : 'dark';
+      applyTheme(currentTheme);
+      toast(`已切换至 ${currentTheme==='amoled'?'AMOLED 纯黑':'深邃暗影'} 模式`, 'success');
+    }
+
+    // 辅助工具：彩色头像计算 & 文本解析
+    function genColor(str) { let h=0; for(let i=0;i<str.length;i++)h=str.charCodeAt(i)+((h<<5)-h); return `hsl(${h%360},65%,60%)`; }
+    function parseText(raw) {
+      let t = raw.replace(/</g, "&lt;").replace(/>/g, "&gt;"); // XSS 防护
+      // 简单 Markdown 解析 (加粗，引用)
+      t = t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      t = t.replace(/^&gt; (.*?)(?:\n|$)/gm, '<div style="border-left:3px solid var(--accent-color); padding-left:10px; color:var(--text-muted); font-size:13px; margin-bottom:5px;">$1</div>');
+      // URL 解析器
+      t = t.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+      return t.replace(/\n/g, '<br>'); // 处理换行
+    }
+
+    /* ==========================================================================
+       [鉴权与网络链接机制]
+       ========================================================================== */
+    function switchAuthMode() {
+      isLoginMode=!isLoginMode; 
+      document.getElementById('btn-login').style.display=isLoginMode?'block':'none'; 
+      document.getElementById('btn-register').style.display=isLoginMode?'none':'block'; 
+      document.getElementById('auth-mode-text').innerText=isLoginMode?'Initialize new identity?':'Access existing protocol'; 
+    }
+    
+    function execLogin() {
+      const u = document.getElementById('auth-usr').value.trim(); const p = document.getElementById('auth-pwd').value.trim();
+      if(u && p) { authSessionToken = p; socket.emit('login', {username:u, password:p}); }
+    }
+    function execRegister() {
+      const u = document.getElementById('auth-usr').value.trim(); const p = document.getElementById('auth-pwd').value.trim();
+      if(u && p) { authSessionToken = p; socket.emit('register', {username:u, password:p}); }
+    }
+
+    socket.on('auth error', m => toast(m, 'error'));
+    socket.on('auth success', m => { toast(m, 'success'); switchAuthMode(); });
+    socket.on('system message', m => toast(m, 'info'));
+
+    // 【登录成功事件】
     socket.on('login success', data => {
-      currentUser = data.username;
-      document.getElementById('auth-screen').style.display = 'none';
-      document.getElementById('my-name').innerText = currentUser;
-      document.getElementById('my-avatar').innerText = currentUser.charAt(0).toUpperCase();
-      document.getElementById('my-avatar').style.background = getAvatarColor(currentUser);
+      currUser = data.username;
+      document.getElementById('auth-screen').style.opacity = 0;
+      document.getElementById('auth-screen').style.visibility = 'hidden';
       
-      if (data.role === 'admin') document.getElementById('admin-entry-btn').style.display = 'flex';
-      if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+      document.getElementById('my-name').innerText = currUser;
+      document.getElementById('my-avatar').innerText = currUser[0].toUpperCase();
+      document.getElementById('my-avatar').style.background = genColor(currUser);
       
-      // 渲染侧边栏
-      renderSidebar(data.groups, data.friends);
+      if(data.role === 'admin') document.getElementById('btn-admin').style.display = 'flex';
+      if("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+      
+      buildNavTree(data.groups, data.friends);
+      
+      // 只有在没房间时才切大厅，防止打断
+      if(!currRoom) routeTo('General', '大厅', 'group', null);
+    });
 
-      // 【核心修复一】：登录成功后，只有当没有当前房间时，才默认进大厅。防止系统自动拉回！
-      if (!currentRoom) {
-        switchRoom('General', '大厅', 'group');
+    // 【核心修复】：拦截服务端的 update sidebar 指令，使用 authSessionToken 自动重载数据！
+    socket.on('update sidebar', () => {
+      if(currUser && authSessionToken) {
+        socket.emit('login', {username: currUser, password: authSessionToken});
       }
     });
 
-    // 接收到别人上线提醒，静默触发侧边栏更新
-    socket.on('online status update', (activeUsers) => {
-      onlineUserArray = activeUsers;
-      const p = document.getElementById('auth-password').value;
-      if(currentUser && p) socket.emit('login', {username: currentUser, password: p});
+    socket.on('online status update', (users) => {
+      onlineSet = users;
+      if(currUser && authSessionToken) socket.emit('login', {username: currUser, password: authSessionToken});
     });
 
-    function renderSidebar(groups, friends) {
-      const list = document.getElementById('room-list');
-      list.innerHTML = '<div class="channel-title">Channels</div>';
-      groups.forEach(g => { 
-        // 【核心修复二】：为每个 li 加上 data-room 属性，纯净匹配，摒弃 onclick 传 this 导致 iPad 闪退的雷区
-        list.innerHTML += `<li class="room-item ${currentRoom === g.groupId ? 'active' : ''}" data-room="${g.groupId}" onclick="switchRoom('${g.groupId}', '${g.groupName}', 'group')"><i class="fa-solid fa-hashtag"></i> ${g.groupName}</li>`; 
+    /* ==========================================================================
+       [侧边栏路由与 DOM 渲染]
+       ========================================================================== */
+    function buildNavTree(groups, friends) {
+      const box = document.getElementById('nav-list');
+      box.innerHTML = '<div class="section-title">Network Hubs</div>';
+      groups.forEach(g => {
+        box.innerHTML += `
+          <div class="nav-item ${currRoom === g.groupId ? 'active' : ''}" data-id="${g.groupId}" onclick="routeTo('${g.groupId}', '${g.groupName}', 'group', this)">
+            <i class="fa-solid fa-satellite-dish"></i> ${g.groupName}
+          </div>`;
       });
-      list.innerHTML += '<div class="channel-title" style="margin-top:15px;">Direct Messages</div>';
+      box.innerHTML += '<div class="section-title" style="margin-top:20px;">Direct Links</div>';
       friends.forEach(f => {
-        const dmId = `DM_${[currentUser, f].sort().join('_')}`;
-        const isOnline = onlineUserArray.includes(f);
-        list.innerHTML += `<li class="room-item ${isOnline ? 'is-online' : ''} ${currentRoom === dmId ? 'active' : ''}" data-room="${dmId}" onclick="switchRoom('${dmId}', '${f}', 'friend')"><i class="fa-solid fa-user"></i> ${f} <div class="online-dot"></div></li>`;
+        const dmid = `DM_${[currUser, f].sort().join('_')}`;
+        const isOn = onlineSet.includes(f);
+        box.innerHTML += `
+          <div class="nav-item ${isOn?'is-online':''} ${currRoom === dmid ? 'active' : ''}" data-id="${dmid}" onclick="routeTo('${dmid}', '${f}', 'friend', this)">
+            <i class="fa-solid fa-user-astronaut"></i> ${f} <div class="status-dot"></div>
+          </div>`;
       });
     }
 
-    function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); }
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+    function toggleInfoPanel() { 
+      const p = document.getElementById('info-panel');
+      if(window.innerWidth > 992) { p.classList.toggle('collapsed'); }
+      else { p.classList.toggle('active-mobile'); }
+    }
 
-    // 【核心修复三】：修改切换逻辑，不依赖 this
-    window.switchRoom = function(roomId, displayName, type) {
-      currentRoom = roomId;
+    // 核心路由引擎 (切换聊天室)
+    window.routeTo = function(id, name, type, el) {
+      currRoom = id;
+      document.getElementById('messages-view').innerHTML = ''; // 清空视口
       
-      // 在名字旁边显示真实的 Room ID
-      document.getElementById('current-room-name').innerHTML = type==='friend'
-        ? `<i class="fa-solid fa-user" style="color:var(--text-muted)"></i> <span>${displayName}</span> <span style="font-size:12px; color:var(--text-muted); font-weight:normal; margin-left:8px;">ID: ${roomId}</span>`
-        : `<i class="fa-solid fa-hashtag" style="color:var(--text-muted)"></i> <span>${displayName}</span> <span style="font-size:12px; color:var(--text-muted); font-weight:normal; margin-left:8px;">ID: ${roomId}</span>`;
+      // 设置头部信息
+      document.getElementById('room-title').innerHTML = type==='friend' ? `<i class="fa-solid fa-user-astronaut"></i> ${name}` : `<i class="fa-solid fa-satellite-dish"></i> ${name}`;
+      document.getElementById('room-subtitle').innerText = `ID: ${id}`;
       
-      const actions = document.getElementById('room-actions');
-      actions.innerHTML = `<button class="icon-btn danger" onclick="promptClearHistory('${roomId}')"><i class="fa-solid fa-trash-can"></i></button>`;
-      if(type==='group' && roomId!=='General') actions.innerHTML += `<button class="icon-btn danger" onclick="promptLeaveGroup('${roomId}')"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>`;
-      else if(type==='friend') actions.innerHTML += `<button class="icon-btn danger" onclick="promptDeleteFriend('${displayName}')"><i class="fa-solid fa-user-minus"></i></button>`;
+      // 设置详情面板信息
+      document.getElementById('info-name').innerText = name;
+      document.getElementById('info-id').innerText = `ID: ${id}`;
+      document.getElementById('info-avatar').innerHTML = type==='friend'? '<i class="fa-solid fa-user"></i>' : '<i class="fa-solid fa-hashtag"></i>';
+      document.getElementById('info-panel').classList.remove('collapsed'); // PC端自动展开详情
       
-      socket.emit('join room', roomId);
+      // 动态挂载动作按钮
+      const tools = document.getElementById('room-tools');
+      tools.innerHTML = `<button class="tool-btn danger" onclick="execCommand('nuke', '${id}')" title="清空协议"><i class="fa-solid fa-radiation"></i></button>`;
+      if(type==='group' && id!=='General') tools.innerHTML += `<button class="tool-btn danger" onclick="execCommand('leave', '${id}')" title="断开连接"><i class="fa-solid fa-link-slash"></i></button>`;
+      else if(type==='friend') tools.innerHTML += `<button class="tool-btn danger" onclick="execCommand('deleteFriend', '${name}')" title="消除羁绊"><i class="fa-solid fa-user-minus"></i></button>`;
+      tools.innerHTML += `<button class="tool-btn" onclick="toggleInfoPanel()" title="档案库"><i class="fa-solid fa-folder-open"></i></button>`;
+
+      socket.emit('join room', id);
       
-      // 通过 data-room 匹配高亮，万无一失
-      document.querySelectorAll('.room-item').forEach(el => {
-        el.classList.remove('active');
-        if (el.getAttribute('data-room') === roomId) el.classList.add('active');
+      // UI 高亮排他
+      document.querySelectorAll('.nav-item').forEach(n => {
+        n.classList.remove('active');
+        if(n.getAttribute('data-id') === id) n.classList.add('active');
       });
-
       if(window.innerWidth<=768) document.getElementById('sidebar').classList.remove('active');
     };
 
-    window.promptCreateGroup = () => showModal({title:'建群', desc:'起个名字', onConfirm: n=>socket.emit('create group', {username:currentUser, groupName:n})});
-    window.promptJoinGroup = () => showModal({title:'加群', desc:'输入群号', onConfirm: id=>socket.emit('join group by id', {username:currentUser, groupId:id})});
-    window.promptAddFriend = () => showModal({title:'加好友', desc:'精确用户名', onConfirm: n=>socket.emit('add friend', {username:currentUser, friendName:n})});
-    window.promptLeaveGroup = (id) => showModal({title:'退群', desc:'确定退出？', showInput:false, confirmClass:'danger', onConfirm:()=>socket.emit('leave group', {username:currentUser, groupId:id})});
-    window.promptDeleteFriend = (name) => showModal({title:'删好友', desc:'输入授权码继续(2437520)', inputType:'password', confirmClass:'danger', onConfirm:(v)=>{if(v==='2437520') socket.emit('delete friend', {username:currentUser, friendName:name}); else showToast('密码错误', 'error');}});
-    window.promptClearHistory = (id) => showModal({title:'清空记录', desc:'核弹警告，输入授权码(2437520)', inputType:'password', confirmClass:'danger', onConfirm:(v)=>{if(v==='2437520') socket.emit('clear history', id); else showToast('密码错误', 'error');}});
+    /* ==========================================================================
+       [业务指令 (Modals mapping)]
+       ========================================================================== */
+    function openModal(cmd) {
+      const map = {
+        'createGroup': { t:'<i class="fa-solid fa-layer-group" style="color:var(--accent-color)"></i> 建立新节点', d:'为你的全新加密通讯阵地命名。', p:'Node Name', fn: v=>socket.emit('create group',{username:currUser,groupName:v}) },
+        'joinGroup': { t:'<i class="fa-solid fa-satellite" style="color:var(--accent-color)"></i> 接入网络', d:'输入指挥官提供的 4 位网络识别码。', p:'ID (e.g. 8848)', fn: v=>socket.emit('join group by id',{username:currUser,groupId:v}) },
+        'addFriend': { t:'<i class="fa-solid fa-user-plus" style="color:var(--accent-color)"></i> 搜索特工', d:'输入特工精确代号，建立点对点加密通道。', p:'Target ID', fn: v=>socket.emit('add friend',{username:currUser,friendName:v}) }
+      };
+      const cfg = map[cmd]; customModal({title:cfg.t, desc:cfg.d, ph:cfg.p, onOK:cfg.fn});
+    }
 
-    // 上帝模式
-    window.openAdminPanel = () => {
-      document.getElementById('admin-dashboard').style.display = 'flex';
-      socket.emit('admin fetch data', currentUser);
+    window.execCommand = function(cmd, payload) {
+      if(cmd==='leave') customModal({title:'<i class="fa-solid fa-triangle-exclamation" style="color:var(--danger-color)"></i> 断开连接', desc:'确认销毁当前节点访问权限？', hasInput:false, cClass:'danger', cText:'断开', onOK:()=>socket.emit('leave group',{username:currUser,groupId:payload})});
+      if(cmd==='deleteFriend') customModal({title:'<i class="fa-solid fa-user-slash" style="color:var(--danger-color)"></i> 解除羁绊', desc:`彻底切断与 ${payload} 的连接通道？授权码: 2437520`, type:'password', ph:'Auth Code', cClass:'danger', cText:'执行', onOK:v=>{if(v==='2437520')socket.emit('delete friend',{username:currUser,friendName:payload});else toast('Authorization Denied.','error');}});
+      if(cmd==='nuke') customModal({title:'<i class="fa-solid fa-radiation" style="color:var(--danger-color)"></i> 核弹协议', desc:'将在此房间进行全局数据抹除。输入发射密码: 2437520', type:'password', ph:'Nuke Code', cClass:'danger', cText:'FIRE', onOK:v=>{if(v==='2437520')socket.emit('clear history',payload);else toast('Nuke aborted.','error');}});
     };
 
-    socket.on('admin data loaded', ({ users, groups }) => {
-      const list = document.getElementById('admin-user-list');
-      list.innerHTML = `<h3 style="color:var(--text-muted);margin-bottom:15px;">居民名册 (${users.length})</h3>`;
-      users.forEach(u => {
-        if(u.username === 'admin') return;
-        const btnText = u.isBanned ? '解封' : '封禁';
-        const btnClass = u.isBanned ? 'btn-warn' : 'btn-danger';
-        list.innerHTML += `
-          <div class="admin-card">
-            <div>
-              <div class="admin-card-title">${u.username} ${u.isBanned ? '🚫' : ''}</div>
-              <div class="admin-card-sub">好友: ${u.friends.length} | 群组: ${u.groups.length}</div>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:5px;">
-              <button class="btn-sm ${btnClass}" onclick="adminToggleBan('${u.username}', ${!u.isBanned})">${btnText}</button>
-              <button class="btn-sm" style="background:#3b82f6;color:white;" onclick="adminResetPwd('${u.username}')">改密</button>
-            </div>
-          </div>
-        `;
-      });
+    socket.on('history cleared', () => {
+      document.getElementById('messages-view').innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--danger-color);opacity:0.8;">
+          <i class="fa-solid fa-biohazard" style="font-size:48px;margin-bottom:15px;"></i>
+          <div style="font-size:14px;letter-spacing:2px;font-weight:700;">PROTOCOL NUKE EXECUTED. AREA CLEARED.</div>
+        </div>`;
     });
 
-    window.adminToggleBan = (targetUser, banStatus) => { socket.emit('admin toggle ban', { adminUser: currentUser, targetUser, banStatus }); setTimeout(openAdminPanel, 500); };
-    window.adminResetPwd = (targetUser) => { const newPwd = prompt(`强制修改 ${targetUser} 的密码为：`); if(newPwd) socket.emit('admin reset password', { adminUser: currentUser, targetUser, newPassword }); };
-    window.adminFetchRoom = () => { const roomId = document.getElementById('admin-room-search').value; if(roomId) socket.emit('admin fetch room history', { adminUser: currentUser, roomId }); };
-
-    socket.on('admin room history loaded', msgs => {
-      const box = document.getElementById('admin-room-history');
-      box.innerHTML = '';
-      if(msgs.length === 0) return box.innerHTML = '<div style="color:gray;">该房间空空如也，或房间号不存在。</div>';
-      msgs.forEach(m => {
-        box.innerHTML += `<div style="margin-bottom:8px;"><span style="color:#facc15;">[${new Date(m.timestamp).toLocaleTimeString()}]</span> <span style="font-weight:bold;color:#60a5fa;">${m.sender}</span>: ${m.msgType==='text'?m.text:'[图片]'}</div>`;
-      });
-      box.scrollTop = box.scrollHeight;
-    });
-
-    socket.on('history cleared', () => document.getElementById('messages').innerHTML = '<div style="text-align:center;color:red;font-size:12px;">记录已被彻底清空</div>');
-    function getAvatarColor(name) { let h=0; for(let i=0;i<name.length;i++) h=name.charCodeAt(i)+((h<<5)-h); return `hsl(${h%360},65%,60%)`; }
-
-    document.getElementById('form').addEventListener('submit', e => {
-      e.preventDefault(); const v = document.getElementById('input').value;
-      if(v && currentRoom) { socket.emit('chat message', { room: currentRoom, sender: currentUser, text: v, msgType: 'text' }); document.getElementById('input').value = ''; }
+    /* ==========================================================================
+       [通讯收发与渲染]
+       ========================================================================== */
+    const msgInput = document.getElementById('msg-input');
+    
+    // 支持 Shift+Enter 换行，Enter 发送
+    msgInput.addEventListener('keydown', e => {
+      if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitMessage(); }
     });
     
-    window.uploadImage = e => {
-      const f = e.target.files[0]; if(!f) return;
-      if(f.size>2*1024*1024) return showToast('图片不能超过2MB','error');
-      const r = new FileReader(); r.onload = e => socket.emit('chat message', { room: currentRoom, sender: currentUser, text: e.target.result, msgType: 'image' });
-      r.readAsDataURL(f); e.target.value='';
-    };
+    function submitMessage() {
+      const v = msgInput.value.trim();
+      if(v && currRoom) { socket.emit('chat message', { room: currRoom, sender: currUser, text: v, msgType: 'text' }); msgInput.value = ''; isEmojiVisible=false; document.getElementById('emoji-picker').style.display='none'; }
+    }
 
-    socket.on('load history', h => { document.getElementById('messages').innerHTML=''; h.forEach(appendMessage); });
-    socket.on('chat message', msg => {
-      appendMessage(msg);
-      if (msg.sender !== currentUser && "Notification" in window && Notification.permission === "granted" && document.hidden) {
-        const n = new Notification(`JR Chat: ${msg.sender}`, { body: msg.msgType==='image'?'[图片]':msg.text });
-        n.onclick = () => window.focus();
+    function handleFileUpload(e) {
+      const f = e.target.files[0]; if(!f) return;
+      if(f.size>2.5*1024*1024) return toast('Image exceeds 2.5MB payload limit.', 'error');
+      const r = new FileReader(); r.onload = ev => socket.emit('chat message', { room: currRoom, sender: currUser, text: ev.target.result, msgType: 'image' });
+      r.readAsDataURL(f); e.target.value='';
+    }
+
+    socket.on('load history', h => { document.getElementById('messages-view').innerHTML=''; h.forEach(renderMsg); });
+    socket.on('chat message', m => {
+      renderMsg(m);
+      if(m.sender !== currUser && "Notification" in window && Notification.permission === "granted" && document.hidden) {
+        new Notification(`JR Chat Intercept: ${m.sender}`, { body: m.msgType==='image'?'[Encrypted Image]':m.text }).onclick = () => window.focus();
       }
     });
 
-    function appendMessage(msg) {
-      const isSelf = msg.sender === currentUser;
-      const c = msg.msgType==='image' ? `<img src="${msg.text}" class="msg-image" onclick="window.open('${msg.text}')" />` : `<div class="bubble">${msg.text}</div>`;
-      document.getElementById('messages').innerHTML += `
-        <div class="message-wrapper ${isSelf ? 'self' : ''}">
-          <div class="avatar" style="background:${getAvatarColor(msg.sender)};color:white;">${msg.sender[0].toUpperCase()}</div>
-          <div class="msg-content">${!isSelf ? `<span class="sender-name">${msg.sender}</span>` : ''}${c}</div>
+    function renderMsg(m) {
+      const view = document.getElementById('messages-view');
+      const isMe = m.sender === currUser;
+      const tFormat = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : 'Now';
+      
+      let html = '';
+      if(m.msgType === 'image') html = `<img src="${m.text}" class="msg-image" onclick="openLightbox('${m.text}')" />`;
+      else html = `<div class="msg-bubble">${parseText(m.text)}</div>`;
+
+      const wrap = document.createElement('div');
+      wrap.className = `message-group ${isMe ? 'self' : ''}`;
+      wrap.innerHTML = `
+        <div class="msg-avatar" style="background:${genColor(m.sender)};color:white;" onclick="toast('特工档案暂未开放')">${m.sender[0].toUpperCase()}</div>
+        <div class="msg-body">
+          <div class="msg-meta">
+            ${!isMe ? `<span class="msg-sender">${m.sender}</span>` : ''}
+            <span class="msg-time">${tFormat}</span>
+          </div>
+          ${html}
         </div>`;
-      document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+      view.appendChild(wrap);
+      view.scrollTop = view.scrollHeight; // 滚动到底部
     }
+
+    /* ==========================================================================
+       [上帝控制台 (Admin Terminal)]
+       ========================================================================== */
+    window.openAdmin = () => { document.getElementById('admin-dash').style.display='flex'; socket.emit('admin fetch data', currUser); };
+    
+    socket.on('admin data loaded', ({ users, groups }) => {
+      const list = document.getElementById('ad-user-list');
+      list.innerHTML = `<div style="color:var(--text-muted);font-weight:700;margin-bottom:15px;text-transform:uppercase;">Network Entities (${users.length})</div>`;
+      users.forEach(u => {
+        if(u.username==='admin') return;
+        const btnAct = u.isBanned?'ad-btn-warn':'ad-btn-danger';
+        list.innerHTML += `
+          <div class="user-card">
+            <div>
+              <div style="font-weight:700;color:#fff;">${u.username} ${u.isBanned?'<i class="fa-solid fa-ban" style="color:red"></i>':''}</div>
+              <div style="font-size:12px;color:gray;margin-top:4px;">Nodes: ${u.groups.length} | Links: ${u.friends.length}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <button class="ad-btn ${btnAct}" onclick="socket.emit('admin toggle ban',{adminUser:'${currUser}',targetUser:'${u.username}',banStatus:${!u.isBanned}});setTimeout(openAdmin,500);">${u.isBanned?'Lift Ban':'Execute Ban'}</button>
+              <button class="ad-btn" style="background:rgba(96,165,250,0.2);color:#60a5fa;" onclick="const p=prompt('Override Password:');if(p)socket.emit('admin reset password',{adminUser:'${currUser}',targetUser:'${u.username}',newPassword:p})">Override</button>
+            </div>
+          </div>`;
+      });
+    });
+
+    window.adminFetch = () => { const r = document.getElementById('ad-search').value.trim(); if(r) socket.emit('admin fetch room history', { adminUser: currUser, roomId: r }); };
+    
+    socket.on('admin room history loaded', msgs => {
+      const b = document.getElementById('ad-viewer'); b.innerHTML = '';
+      if(!msgs.length) return b.innerHTML = '<span style="color:#ef4444;">[SYSTEM] Target node empty or non-existent.</span>';
+      msgs.forEach(m => {
+        const d = new Date(m.timestamp).toISOString().split('T');
+        b.innerHTML += `<div style="margin-bottom:6px;border-bottom:1px dashed rgba(255,255,255,0.1);padding-bottom:6px;">
+          <span style="color:#10b981;">[${d[0]} ${d[1].substring(0,8)}]</span> 
+          <span style="color:#60a5fa;font-weight:bold;">${m.sender}</span> > 
+          <span style="color:#cbd5e1;">${m.msgType==='text'?m.text:'[BINARY IMAGE DATA]'}</span>
+        </div>`;
+      });
+      b.scrollTop = b.scrollHeight;
+    });
   </script>
 </body>
 </html>
