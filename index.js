@@ -4,9 +4,8 @@ const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 
-// 配置 Socket.IO，允许最大 5MB 的传输（主要为了支持 Base64 图片上传）
 const io = new Server(server, { 
-  maxHttpBufferSize: 5e6,
+  maxHttpBufferSize: 5e6, // 允許最大 5MB 傳輸
   cors: { origin: "*" }
 }); 
 
@@ -14,15 +13,13 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 // ==========================================================================
-// 1. MongoDB 数据库连接与初始化
+// 1. MongoDB 資料庫連線與初始化
 // ==========================================================================
 const mongoURI = process.env.MONGODB_URI;
 
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(async () => {
-    console.log('✅ MongoDB 数据库连接成功');
-    
-    // 【系统初始化】：自动生成超级管理员 (admin) 账号
+    console.log('✅ MongoDB 資料庫連線成功');
     try {
       const adminExists = await User.findOne({ username: 'admin' });
       if (!adminExists) {
@@ -30,321 +27,350 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
         const hashedPassword = bcrypt.hashSync('admin', salt);
         await new User({ 
           username: 'admin', 
+          email: 'admin@jrchat.com',
           password: hashedPassword, 
           role: 'admin',
-          groups: [{ groupId: 'General', groupName: '大厅' }]
+          groups: [{ groupId: 'General', groupName: '大廳' }]
         }).save();
-        console.log('👑 超级管理员 admin 账号初始化完成');
+        console.log('👑 超級管理員 admin 帳號初始化完成');
       }
-    } catch (e) {
-      console.error('管理员账号检查/创建失败:', e);
-    }
+    } catch (e) { console.error('管理員帳號建立失敗:', e); }
   })
-  .catch(err => console.error('❌ MongoDB 数据库连接失败:', err));
+  .catch(err => console.error('❌ MongoDB 資料庫連線失敗:', err));
 
 // ==========================================================================
-// 2. 数据库模型 (Schemas)
+// 2. 資料庫模型 (Schemas) 升級
 // ==========================================================================
-
-// 用户表 (User)
 const userSchema = new mongoose.Schema({
   username: { type: String, unique: true, required: true },
+  email: { type: String }, // 【新增】：信箱
   password: { type: String, required: true },
-  friends: [String], // 存储好友的用户名列表
-  groups: [{ groupId: String, groupName: String }], // 存储加入的群聊列表
-  role: { type: String, default: 'user' }, // 权限角色：'user' 或 'admin'
-  isBanned: { type: Boolean, default: false } // 是否被封禁
+  avatar: { type: String, default: '' }, // 【新增】：自訂頭像 (Base64)
+  bio: { type: String, default: '這位特工很神祕，什麼都沒寫。' }, // 【新增】：個性簽名
+  friends: [String], 
+  groups: [{ groupId: String, groupName: String }], 
+  role: { type: String, default: 'user' }, 
+  isBanned: { type: Boolean, default: false },
+  resetCode: { type: String, default: '' }, // 【新增】：忘記密碼驗證碼
+  resetCodeExpiry: { type: Date } // 【新增】：驗證碼過期時間
 });
 const User = mongoose.model('User', userSchema);
 
-// 群组表 (Group)
 const groupSchema = new mongoose.Schema({
-  groupId: { type: String, unique: true }, // 系统生成的 4 位唯一群号
+  groupId: { type: String, unique: true }, 
   groupName: String,
-  members: [String] // 群成员的用户名列表
+  members: [String] 
 });
 const Group = mongoose.model('Group', groupSchema);
 
-// 消息记录表 (Message)
 const messageSchema = new mongoose.Schema({
-  room: String, // 房间号 (群号 或 DM_A_B)
+  room: String, 
   sender: String,
-  text: String, // 文本内容或 Base64 图片数据
-  msgType: { type: String, default: 'text' }, // 'text' 或 'image'
+  text: String, 
+  msgType: { type: String, default: 'text' }, 
   timestamp: { type: Date, default: Date.now }
 });
 const Message = mongoose.model('Message', messageSchema);
 
-// ==========================================================================
-// 3. 内存状态追踪 (在线人员列表)
-// ==========================================================================
-// 记录 socket.id 对应的 username
+// 記憶體狀態追蹤
 const onlineUsers = new Map(); 
+const getSocketIdByUsername = (username) => {
+  return [...onlineUsers.entries()].find(([k, v]) => v === username)?.[0];
+};
 
-// 静态文件路由：将前端页面发送给客户端
-app.get('/', (req, res) => { 
-  res.sendFile(__dirname + '/index.html'); 
-});
+app.get('/', (req, res) => { res.sendFile(__dirname + '/index.html'); });
 
 // ==========================================================================
-// 4. WebSocket 核心业务逻辑
+// 3. WebSocket 核心業務邏輯
 // ==========================================================================
 io.on('connection', (socket) => {
   
-  // 辅助函数：广播当前在线的全局用户名单
   const broadcastOnlineStatus = () => {
     const activeUsernames = Array.from(new Set(onlineUsers.values()));
     io.emit('online status update', activeUsernames);
   };
 
   // --------------------------------------------------------
-  // A. 鉴权系统 (注册、登录与状态保持)
+  // A. 驗證系統 (註冊、登入、忘記密碼)
   // --------------------------------------------------------
-  socket.on('register', async ({ username, password }) => {
+  socket.on('register', async ({ username, email, password }) => {
     try {
-      if (username.toLowerCase() === 'admin') return socket.emit('auth error', 'Admin 是系统保留账户，无法注册！');
+      if (username.toLowerCase() === 'admin') return socket.emit('auth error', '保留帳戶，無法註冊！');
+      if (!email) return socket.emit('auth error', '請填寫安全信箱以保障帳戶安全！');
       
       const existingUser = await User.findOne({ username });
-      if (existingUser) return socket.emit('auth error', '用户名已被抢占，换一个吧！');
+      if (existingUser) return socket.emit('auth error', '代號已被搶占！');
       
       const salt = bcrypt.genSaltSync(10);
       const hashedPassword = bcrypt.hashSync(password, salt);
       
       const newUser = new User({ 
-        username, 
-        password: hashedPassword, 
-        groups: [{ groupId: 'General', groupName: '大厅' }] // 新用户默认加入大厅
+        username, email, password: hashedPassword, 
+        groups: [{ groupId: 'General', groupName: '大廳' }] 
       });
       await newUser.save();
-      
-      socket.emit('auth success', '身份验证创建成功，请登录节点。');
-    } catch (err) { 
-      console.error('注册错误:', err); 
-      socket.emit('auth error', '注册时发生服务器错误');
-    }
+      socket.emit('auth success', '身份驗證建立成功，請登入節點。');
+    } catch (err) { socket.emit('auth error', '註冊時發生錯誤'); }
   });
 
   socket.on('login', async ({ username, password }) => {
     try {
       const user = await User.findOne({ username });
-      if (!user) return socket.emit('auth error', '该用户节点不存在！');
-      
-      // 封禁拦截逻辑
-      if (user.isBanned) return socket.emit('auth error', '🚫 警告：该账户已被系统强制封禁访问权限！');
+      if (!user) return socket.emit('auth error', '該特工不存在！');
+      if (user.isBanned) return socket.emit('auth error', '🚫 警告：帳戶已被強制封禁！');
 
       const isMatch = bcrypt.compareSync(password, user.password);
-      if (!isMatch) return socket.emit('auth error', '访问密钥不匹配！');
+      if (!isMatch) return socket.emit('auth error', '存取金鑰不符合！');
       
-      // 登录成功，更新在线追踪器
       onlineUsers.set(socket.id, user.username);
       socket.username = user.username; 
-      broadcastOnlineStatus(); // 通知所有人该用户上线了
+      broadcastOnlineStatus(); 
 
-      socket.emit('login success', { 
-        username: user.username, 
-        friends: user.friends, 
-        groups: user.groups, 
-        role: user.role 
-      });
-    } catch (err) { 
-      console.error('登录错误:', err); 
-    }
+      socket.emit('login success', { username: user.username, friends: user.friends, groups: user.groups, role: user.role, avatar: user.avatar });
+    } catch (err) { console.error('登入錯誤:', err); }
+  });
+
+  // 忘記密碼：請求驗證碼
+  socket.on('request password reset', async ({ username, email }) => {
+    try {
+      const user = await User.findOne({ username, email });
+      if (!user) return socket.emit('auth error', '使用者名稱與信箱不匹配或不存在！');
+      
+      // 產生 6 位隨機數字
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      user.resetCode = code;
+      user.resetCodeExpiry = Date.now() + 15 * 60 * 1000; // 15 分鐘有效期
+      await user.save();
+
+      // 在真實環境應呼叫 SMTP 發信。此處為展示，直接將驗證碼回傳給前端 Toast。
+      socket.emit('system message', `【系統模擬郵件】已發送驗證碼至 ${email}`);
+      socket.emit('reset code received', code); // 僅供展示與測試，真實環境絕對不該傳回前端
+    } catch (err) { socket.emit('auth error', '系統錯誤'); }
+  });
+
+  // 忘記密碼：執行重設
+  socket.on('execute password reset', async ({ username, code, newPassword }) => {
+    try {
+      const user = await User.findOne({ username, resetCode: code });
+      if (!user) return socket.emit('auth error', '驗證碼錯誤或失效！');
+      if (user.resetCodeExpiry < Date.now()) return socket.emit('auth error', '驗證碼已過期，請重新獲取！');
+
+      const salt = bcrypt.genSaltSync(10);
+      user.password = bcrypt.hashSync(newPassword, salt);
+      user.resetCode = ''; // 清空
+      await user.save();
+      socket.emit('auth success', '金鑰重設成功，請使用新金鑰登入！');
+    } catch (err) { socket.emit('auth error', '系統錯誤'); }
   });
 
   socket.on('disconnect', () => {
     if (onlineUsers.has(socket.id)) {
       onlineUsers.delete(socket.id);
-      broadcastOnlineStatus(); // 通知所有人该用户下线了
+      broadcastOnlineStatus(); 
     }
   });
 
   // --------------------------------------------------------
-  // B. 房间与好友关系管理
+  // B. 個人檔案與資料匯出 (Profile & GDPR)
   // --------------------------------------------------------
-  
-  // 创建新群聊
-  socket.on('create group', async ({ username, groupName }) => {
+  socket.on('fetch profile', async ({ targetUser }) => {
     try {
-      // 随机生成 4 位群号
-      const groupId = Math.floor(1000 + Math.random() * 9000).toString(); 
-      await new Group({ groupId, groupName, members: [username] }).save();
+      const user = await User.findOne({ username: targetUser }, { password: 0, resetCode: 0 });
+      if (!user) return socket.emit('system message', '找不到該特工檔案');
       
-      await User.updateOne({ username }, { $push: { groups: { groupId, groupName } } });
-      
-      socket.emit('system message', `群聊 [${groupName}] 节点创建成功！网络识别码: ${groupId}`);
-      socket.emit('update sidebar'); // 通知前端重新拉取侧边栏数据
-    } catch (e) { console.error(e); }
+      const isOnline = Array.from(onlineUsers.values()).includes(targetUser);
+      socket.emit('profile data loaded', { 
+        username: user.username, email: user.email, avatar: user.avatar, bio: user.bio, role: user.role, isOnline 
+      });
+    } catch (e) {}
   });
 
-  // 通过群号加入群聊
+  socket.on('update profile', async ({ username, bio, avatar }) => {
+    try {
+      const updates = {};
+      if(bio !== undefined) updates.bio = bio;
+      if(avatar !== undefined) updates.avatar = avatar;
+      await User.updateOne({ username }, updates);
+      socket.emit('system message', '個人檔案已更新！');
+      // 通知自己重新拉取資料刷新介面
+      socket.emit('profile updated');
+    } catch (e) { socket.emit('system message', '檔案更新失敗'); }
+  });
+
+  socket.on('download account data', async ({ username }) => {
+    try {
+      const user = await User.findOne({ username }, { password: 0 });
+      // 獲取該使用者發送過的所有訊息
+      const messages = await Message.find({ sender: username });
+      
+      const exportData = {
+        accountInfo: user,
+        messagesHistory: messages,
+        exportedAt: new Date().toISOString()
+      };
+      
+      socket.emit('account data ready', exportData);
+    } catch (e) { socket.emit('system message', '資料打包失敗'); }
+  });
+
+  // --------------------------------------------------------
+  // C. 房間、好友與聊天邏輯
+  // --------------------------------------------------------
+  socket.on('create group', async ({ username, groupName }) => {
+    try {
+      const groupId = Math.floor(1000 + Math.random() * 9000).toString(); 
+      await new Group({ groupId, groupName, members: [username] }).save();
+      await User.updateOne({ username }, { $push: { groups: { groupId, groupName } } });
+      socket.emit('system message', `群組 [${groupName}] 建立成功！代碼: ${groupId}`);
+      socket.emit('update sidebar'); 
+    } catch (e) {}
+  });
+
   socket.on('join group by id', async ({ username, groupId }) => {
     try {
       const group = await Group.findOne({ groupId });
-      if (!group) return socket.emit('system message', '未找到对应的网络识别码！');
-      if (group.members.includes(username)) return socket.emit('system message', '您已在该节点的通讯网络中！');
-      
-      group.members.push(username);
-      await group.save();
-      
+      if (!group) return socket.emit('system message', '代碼錯誤！');
+      if (group.members.includes(username)) return socket.emit('system message', '您已在該群組中！');
+      group.members.push(username); await group.save();
       await User.updateOne({ username }, { $push: { groups: { groupId: group.groupId, groupName: group.groupName } } });
-      
-      socket.emit('system message', `已成功接入节点: ${group.groupName}`);
+      socket.emit('system message', `已加入群組: ${group.groupName}`);
       socket.emit('update sidebar');
-    } catch (e) { console.error(e); }
+    } catch (e) {}
   });
 
-  // 添加好友
   socket.on('add friend', async ({ username, friendName }) => {
     try {
-      if(username === friendName) return socket.emit('system message', '无法与自己建立链接。');
-      
+      if(username === friendName) return;
       const friend = await User.findOne({ username: friendName });
-      if (!friend) return socket.emit('system message', '目标特工代号不存在！');
-      
+      if (!friend) return socket.emit('system message', '目標不存在！');
       const me = await User.findOne({ username });
-      if (me.friends.includes(friendName)) return socket.emit('system message', '加密通讯链路已存在。');
+      if (me.friends.includes(friendName)) return socket.emit('system message', '已是好友。');
 
-      // 互相添加进对方的 friends 数组
       await User.updateOne({ username }, { $push: { friends: friendName } });
       await User.updateOne({ username: friendName }, { $push: { friends: username } });
-      
-      socket.emit('system message', `已成功与 ${friendName} 建立私人连接！`);
+      socket.emit('system message', `已與 ${friendName} 成為好友！`);
       socket.emit('update sidebar');
-      
-      // 如果对方当前在线，强制刷新他的侧边栏，让他立刻看到你
-      const friendSocketId = [...onlineUsers.entries()].find(([k, v]) => v === friendName)?.[0];
+      const friendSocketId = getSocketIdByUsername(friendName);
       if (friendSocketId) io.to(friendSocketId).emit('update sidebar');
-    } catch (e) { console.error(e); }
+    } catch (e) {}
   });
 
-  // 删除好友 (毁灭操作)
   socket.on('delete friend', async ({ username, friendName }) => {
     try {
       await User.updateOne({ username }, { $pull: { friends: friendName } });
       await User.updateOne({ username: friendName }, { $pull: { friends: username } });
-      socket.emit('system message', `已销毁与 ${friendName} 的链接协议。`);
+      socket.emit('system message', `已刪除好友 ${friendName}。`);
       socket.emit('update sidebar');
-      
-      // 同样通知对方刷新
-      const friendSocketId = [...onlineUsers.entries()].find(([k, v]) => v === friendName)?.[0];
+      const friendSocketId = getSocketIdByUsername(friendName);
       if (friendSocketId) io.to(friendSocketId).emit('update sidebar');
-    } catch (e) { console.error(e); }
+    } catch (e) {}
   });
 
-  // 退出群聊
   socket.on('leave group', async ({ username, groupId }) => {
     try {
-      if (groupId === 'General') return socket.emit('system message', '大厅节点为全局广播通道，无法断开！');
-      
+      if (groupId === 'General') return;
       await Group.updateOne({ groupId }, { $pull: { members: username } });
       await User.updateOne({ username }, { $pull: { groups: { groupId } } });
-      
-      socket.emit('system message', `已切断与该群组的网络连接。`);
+      socket.emit('system message', `已退出群組。`);
       socket.emit('update sidebar');
-    } catch (e) { console.error(e); }
+    } catch (e) {}
   });
 
-  // 清空房间记录 (核弹操作)
   socket.on('clear history', async (room) => {
-    try {
-      await Message.deleteMany({ room });
-      // 广播给房间里所有人：该房间的记录已被核平
-      io.to(room).emit('history cleared'); 
-    } catch (e) { console.error(e); }
+    try { await Message.deleteMany({ room }); io.to(room).emit('history cleared'); } catch (e) {}
   });
 
-  // --------------------------------------------------------
-  // C. 核心聊天引擎
-  // --------------------------------------------------------
-  
-  // 加入特定 Socket.IO 房间以接收广播
   socket.on('join room', async (roomName) => {
     try {
-      // 退出除了自身 ID 以外的所有房间
       Array.from(socket.rooms).forEach(r => { if (r !== socket.id) socket.leave(r); });
-      
       socket.join(roomName);
-      
-      // 从数据库抓取该房间的最近 150 条记录
       const history = await Message.find({ room: roomName }).sort({ timestamp: 1 }).limit(150);
       socket.emit('load history', history);
-    } catch (e) { console.error(e); }
+    } catch (e) {}
   });
 
-  // 接收并处理新消息 (支持文本与 Base64 图片)
   socket.on('chat message', async (msgData) => {
     try {
-      // 1. 存入数据库
+      // 處理前端可能傳來的自訂頭像 (優化傳輸，避免每次帶長字串，此處僅簡單存儲)
       const newMessage = new Message(msgData);
       await newMessage.save();
-      
-      // 2. 广播给该房间内的所有活跃连接
       io.to(msgData.room).emit('chat message', msgData);
-    } catch (e) { console.error('保存消息失败:', e); }
+    } catch (e) {}
   });
 
   // --------------------------------------------------------
-  // D. 👑 上帝模式 API (Admin 专属)
+  // D. WebRTC 語音通話 (徹底修復漏接 Bug)
   // --------------------------------------------------------
-  
-  // 权限校验中间件
-  const checkAdmin = async (username) => {
-    const user = await User.findOne({ username });
-    return user && user.role === 'admin';
-  };
+  // 【核心修復】：不再依賴 socket.username，由前端強制攜帶 caller 資訊
+  socket.on('call request', ({ caller, target }) => {
+    const targetId = getSocketIdByUsername(target);
+    if (targetId) {
+      io.to(targetId).emit('incoming call', { caller });
+    } else {
+      socket.emit('call error', '對方目前不在線上。');
+    }
+  });
 
-  // 抓取全站数据面板
+  socket.on('call response', ({ caller, callee, accepted }) => {
+    const callerId = getSocketIdByUsername(caller);
+    if (callerId) {
+      io.to(callerId).emit('call response', { callee, accepted });
+    }
+  });
+
+  socket.on('webrtc signal', ({ sender, target, signal }) => {
+    const targetId = getSocketIdByUsername(target);
+    if (targetId) {
+      io.to(targetId).emit('webrtc signal', { sender, signal });
+    }
+  });
+
+  socket.on('end call', ({ sender, target }) => {
+    const targetId = getSocketIdByUsername(target);
+    if (targetId) {
+      io.to(targetId).emit('call ended', { sender });
+    }
+  });
+
+  // --------------------------------------------------------
+  // E. 👑 上帝模式 API (Admin 專屬)
+  // --------------------------------------------------------
+  const checkAdmin = async (username) => { return (await User.findOne({ username }))?.role === 'admin'; };
+
   socket.on('admin fetch data', async (adminUser) => {
     if (!(await checkAdmin(adminUser))) return;
-    
-    // 隐藏 password 字段，防止密码哈希泄露给前端
-    const users = await User.find({}, { password: 0 }); 
+    const users = await User.find({}, { password: 0, resetCode: 0 }); 
     const groups = await Group.find({});
-    
     socket.emit('admin data loaded', { users, groups });
   });
 
-  // 封禁/解封 任意用户
   socket.on('admin toggle ban', async ({ adminUser, targetUser, banStatus }) => {
     if (!(await checkAdmin(adminUser)) || targetUser === 'admin') return;
-    
     await User.updateOne({ username: targetUser }, { isBanned: banStatus });
-    socket.emit('system message', `已${banStatus ? '封禁' : '解封'}特工：${targetUser}`);
-    
-    // 如果是执行封禁，且该用户在线，触发强制踢下线机制
+    socket.emit('system message', `已${banStatus ? '封禁' : '解封'}：${targetUser}`);
     if (banStatus) {
-      const targetSocketId = [...onlineUsers.entries()].find(([k, v]) => v === targetUser)?.[0];
+      const targetSocketId = getSocketIdByUsername(targetUser);
       if (targetSocketId) {
-        io.to(targetSocketId).emit('auth error', '【系统警告】您的访问权限已被根节点服务器强行终止！');
+        io.to(targetSocketId).emit('auth error', '您的存取權限已被強制終止！');
         io.sockets.sockets.get(targetSocketId)?.disconnect(true);
       }
     }
   });
 
-  // 强制重置任意用户密码
   socket.on('admin reset password', async ({ adminUser, targetUser, newPassword }) => {
     if (!(await checkAdmin(adminUser))) return;
-    
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(newPassword, salt);
-    
     await User.updateOne({ username: targetUser }, { password: hashedPassword });
-    socket.emit('system message', `已强制覆写 ${targetUser} 的访问密钥！`);
+    socket.emit('system message', `已強制修改 ${targetUser} 的金鑰！`);
   });
 
-  // 幽灵协议：无需加入房间，直接调阅数据库历史
   socket.on('admin fetch room history', async ({ adminUser, roomId }) => {
     if (!(await checkAdmin(adminUser))) return;
-    
     const history = await Message.find({ room: roomId }).sort({ timestamp: 1 }).limit(200);
     socket.emit('admin room history loaded', history);
   });
 });
 
-// ==========================================================================
-// 5. 启动服务器监听
-// ==========================================================================
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => { 
-  console.log(`🚀 JR Chat 服务器引擎已在端口 ${PORT} 点火运行`); 
-});
+server.listen(PORT, () => { console.log(`🚀 JR Chat 伺服器已啟動於 ${PORT}`); });
