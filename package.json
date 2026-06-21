@@ -1,19 +1,20 @@
-```json
 {
-  "name": "gemini-render-mirror",
-  "version": "1.0.0",
-  "description": "Gemini API Mirror deployed on Render",
-  "main": "server.js",
-  "type": "module",
+  "name": "jr-ecosystem",
+  "version": "9.0.0",
+  "description": "JR Super App with Moments and Passkeys",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node index.js"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
-    "cors": "^2.8.5",
-    "express": "^4.21.0"
+    "bcryptjs": "^2.4.3",
+    "debug": "^4.3.4",
+    "express": "^4.19.2",
+    "mongoose": "^8.3.0",
+    "otplib": "^12.0.1",
+    "socket.io": "^4.7.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
-
-
-```
