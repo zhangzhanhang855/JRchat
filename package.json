@@ -1,17 +1,19 @@
+```json
 {
-  "name": "chatroom",
+  "name": "gemini-render-mirror",
   "version": "1.0.0",
-  "description": "JRchat",
-  "main": "index.js",
+  "description": "Gemini API Mirror deployed on Render",
+  "main": "server.js",
+  "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
-    "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "debug": "^4.3.4",
-    "express": "^4.18.2",
-    "mongoose": "^8.0.0",
-    "otplib": "^12.0.1",
-    "socket.io": "^4.7.2"
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.0"
   }
 }
+
+
+```
