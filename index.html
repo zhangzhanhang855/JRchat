@@ -9,9 +9,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="JR System">
   
-  <title>JR Chat V8.1 - 2FA Key Edition</title>
+  <title>JR Chat V9.0 - Passkey & Moments</title>
   
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://gs.jurieo.com/gemini/fonts-googleapis/css2?family=Inter:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
 
@@ -27,7 +27,7 @@
     }
     [data-theme="amoled"] { --bg-base: #000000; --bg-sidebar: rgba(0, 0, 0, 0.9); --bg-panel: #0a0a0a; --bg-message: #121212; --border-light: rgba(255, 255, 255, 0.1); }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg-base); color: var(--text-main); height: 100dvh; overflow: hidden; display: flex; transition: background 0.3s ease; }
+    body { background: var(--bg-base); color: var(--text-main); height: 100dvh; overflow: hidden; display: flex; flex-direction: row; transition: background 0.3s ease; }
     a { color: var(--accent-color); text-decoration: none; }
     ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; } ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
 
@@ -39,7 +39,7 @@
     .modal-box { background: rgba(20,22,30,0.95); border: 1px solid var(--border-strong); width: 90%; max-width: 360px; border-radius: 20px; padding: 24px; box-shadow: var(--glass-shadow); transform: scale(0.95); transition: 0.2s; }
     .modal-header { font-size: 18px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
     .modal-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
-    .modal-input-field { width: 100%; padding: 12px 14px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-light); color: #fff; border-radius: 10px; outline: none; margin-bottom: 20px; font-size: 14px; transition: 0.2s; text-align: center; font-family: monospace; font-size: 18px; letter-spacing: 2px;}
+    .modal-input-field { width: 100%; padding: 12px 14px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-light); color: #fff; border-radius: 10px; outline: none; margin-bottom: 20px; font-size: 14px; transition: 0.2s; font-family: inherit;}
     .modal-input-field:focus { border-color: var(--accent-color); }
     .modal-footer { display: flex; justify-content: flex-end; gap: 8px; }
     .m-btn { padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; }
@@ -50,7 +50,7 @@
     #lightbox-img { max-width: 90%; max-height: 85dvh; border-radius: 12px; transform: scale(0.95); transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     .lightbox-close { position: absolute; top: calc(20px + env(safe-area-inset-top, 0px)); right: 20px; background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; }
 
-    /* 认证系统 (加入 2FA 双重身份验证拦截区) */
+    /* 认证系统 */
     #auth-screen { position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center; background-image: linear-gradient(rgba(15, 17, 26, 0.8), rgba(15, 17, 26, 0.95)), url('https://raw.githubusercontent.com/zhangzhanhang855/JRchat/main/bg.jpg'); background-size: cover; background-position: center; transition: opacity 0.5s, visibility 0.5s; }
     .auth-card { background: rgba(20, 24, 34, 0.6); backdrop-filter: var(--blur-lg); border: 1px solid var(--border-strong); padding: 40px 35px; border-radius: 28px; width: 90%; max-width: 400px; text-align: center; box-shadow: var(--glass-shadow); animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1); position: relative; overflow: hidden;}
     .auth-card h2 { font-weight: 800; font-size: 26px; margin-bottom: 5px; color: #fff; }
@@ -58,9 +58,9 @@
     .auth-input-group i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; }
     .auth-input { width: 100%; padding: 14px 15px 14px 45px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-light); color: #fff; border-radius: 12px; outline: none; font-size: 14px; transition: 0.3s; }
     .auth-input:focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px var(--accent-glow); }
-    .auth-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--accent-color); color: #fff; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 20px; margin-bottom: 15px; transition: 0.2s; box-shadow: 0 4px 15px var(--accent-glow); }
+    .auth-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--accent-color); color: #fff; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 20px; transition: 0.2s; box-shadow: 0 4px 15px var(--accent-glow); display: flex; justify-content: center; align-items: center; gap: 8px;}
     .auth-btn:hover { background: var(--accent-hover); transform: translateY(-2px); }
-    .auth-switch { color: var(--text-secondary); font-size: 13px; cursor: pointer; font-weight: 500; transition: 0.2s; margin-top: 10px;}
+    .auth-switch { color: var(--text-secondary); font-size: 13px; cursor: pointer; font-weight: 500; transition: 0.2s; margin-top: 15px;}
     .auth-switch:hover { color: #fff; text-decoration: underline;}
 
     /* 个人档案面板 */
@@ -68,8 +68,7 @@
     .profile-card-lg { background: var(--bg-panel); border: 1px solid var(--border-strong); width: 90%; max-width: 420px; border-radius: 24px; overflow: hidden; box-shadow: var(--glass-shadow); transform: scale(0.95); transition: 0.3s; position: relative; }
     .profile-header-bg { height: 120px; background: linear-gradient(135deg, var(--accent-color), #a855f7); position: relative; }
     .profile-close-btn { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.3); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; transition: 0.2s; }
-    .profile-close-btn:hover { background: rgba(0,0,0,0.6); }
-    .profile-avatar-lg { width: 80px; height: 80px; border-radius: 50%; border: 4px solid var(--bg-panel); background: var(--bg-message); position: absolute; bottom: -40px; left: 24px; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: bold; color: #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.3); background-size: cover; background-position: center; cursor: pointer;}
+    .profile-avatar-lg { width: 80px; height: 80px; border-radius: 50%; border: 4px solid var(--bg-panel); background: var(--bg-message); position: absolute; bottom: -40px; left: 24px; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: bold; color: #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.3); background-size: cover; background-position: center;}
     .profile-body { padding: 50px 24px 24px; }
     .profile-name-lg { font-size: 22px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
     .profile-email { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; font-family: monospace; }
@@ -79,18 +78,47 @@
     .p-btn { padding: 10px; border-radius: 10px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; color: #fff; }
     .p-btn.primary { background: var(--accent-color); } .p-btn.primary:hover { background: var(--accent-hover); }
     .p-btn.secondary { background: rgba(255,255,255,0.05); border: 1px solid var(--border-light); } .p-btn.secondary:hover { background: rgba(255,255,255,0.1); }
-    .p-btn.danger { background: var(--danger-bg); color: var(--danger-color); } .p-btn.danger:hover { background: var(--danger-color); color: #fff; }
+    .p-btn.danger { background: var(--danger-bg); color: var(--danger-color); }
     #avatar-upload-input { display: none; }
 
+    /* ================= 响应式 App 导航底栏 / 侧栏 ================= */
+    #app-tab-bar {
+      background: var(--bg-sidebar); backdrop-filter: var(--blur-md);
+      z-index: 500; display: flex; align-items: center; justify-content: center;
+    }
+    .tab-btn {
+      background: transparent; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 4px;
+      font-size: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; padding: 10px; width: 100%;
+    }
+    .tab-btn i { font-size: 20px; margin-bottom: 2px;}
+    .tab-btn.active, .tab-btn:hover { color: var(--accent-color); }
+    
+    #app-container { flex: 1; height: 100dvh; display: flex; position: relative; overflow: hidden; background: var(--bg-base); }
+    .app-view { display: none; width: 100%; height: 100%; flex-direction: column; overflow: hidden;}
+    .app-view.active { display: flex; }
+
+    @media (min-width: 769px) { /* iPad & Desktop: Left Sidebar */
+      #app-tab-bar { width: 75px; height: 100dvh; flex-direction: column; justify-content: flex-start; padding-top: calc(20px + env(safe-area-inset-top, 0px)); border-right: 1px solid var(--border-light); }
+      .tab-btn { padding: 15px 0; margin-bottom: 10px; }
+      #sidebar { border-left: 1px solid var(--border-light); }
+    }
+    @media (max-width: 768px) { /* iPhone: Bottom Bar */
+      body { flex-direction: column-reverse; }
+      #app-tab-bar { width: 100%; height: calc(60px + env(safe-area-inset-bottom, 0px)); flex-direction: row; justify-content: space-around; padding-bottom: env(safe-area-inset-bottom, 0px); border-top: 1px solid var(--border-light); }
+      #app-container { height: calc(100dvh - 60px - env(safe-area-inset-bottom, 0px)); }
+      #sidebar { position: fixed; height: calc(100dvh - 60px - env(safe-area-inset-bottom, 0px)); transform: translateX(-100%); box-shadow: 10px 0 40px rgba(0,0,0,0.8); z-index: 200; width: 280px; }
+      #sidebar.active { transform: translateX(0); }
+    }
+
     /* 主聊天框架 */
-    #app-container { display: flex; width: 100%; height: 100dvh; }
-    #sidebar { width: 280px; background: var(--bg-sidebar); backdrop-filter: var(--blur-md); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; z-index: 100; transition: 0.3s; flex-shrink: 0; }
+    #sidebar { width: 280px; background: var(--bg-sidebar); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; transition: 0.3s; flex-shrink: 0; }
     .sidebar-header { padding: calc(20px + env(safe-area-inset-top, 0px)) 20px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
     .sidebar-brand { font-size: 18px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
     .theme-toggle { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; transition: 0.2s; }
     .sidebar-scroll { flex: 1; overflow-y: auto; padding: 10px; }
     .section-title { padding: 10px 12px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
-    .nav-item { padding: 10px 12px; margin: 2px 0; border-radius: 8px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: 0.2s; overflow: hidden; }
+    /* Fix: iPad Touch Event Bug. added touch-action */
+    .nav-item { padding: 10px 12px; margin: 2px 0; border-radius: 8px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: 0.2s; touch-action: manipulation; }
     .nav-item i { width: 18px; text-align: center; opacity: 0.6; }
     .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
     .nav-item.active { background: rgba(99, 102, 241, 0.15); color: var(--accent-hover); }
@@ -98,14 +126,7 @@
     .status-dot { width: 6px; height: 6px; background: var(--success-color); border-radius: 50%; box-shadow: 0 0 5px var(--success-color); margin-left: auto; display: none; }
     .nav-item.is-online .status-dot { display: block; }
     
-    .sidebar-footer { padding: 15px 15px calc(15px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border-light); background: rgba(0,0,0,0.15); }
-    .profile-card { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding: 6px; border-radius: 10px; background: rgba(255,255,255,0.02); cursor: pointer; transition: 0.2s; }
-    .profile-card:hover { background: rgba(255,255,255,0.05); }
-    .profile-avatar { width: 34px; height: 34px; border-radius: 10px; background: var(--accent-color); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; background-size: cover; background-position: center;}
-    .profile-info { flex: 1; overflow: hidden; }
-    .profile-name { font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .logout-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; transition: 0.2s; }
-    .logout-btn:hover { color: var(--danger-color); }
+    .sidebar-footer { padding: 15px; border-top: 1px solid var(--border-light); background: rgba(0,0,0,0.15); }
     .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .q-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); color: var(--text-main); padding: 8px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
     .q-btn:hover { background: rgba(255,255,255,0.08); } .q-btn.full { grid-column: span 2; }
@@ -140,7 +161,7 @@
     .msg-bubble a { color: #60a5fa; text-decoration: underline; }
     .msg-image { max-width: 250px; max-height: 250px; border-radius: 10px; cursor: pointer; border: 1px solid var(--border-light); object-fit: cover; transition: 0.2s; }
 
-    .input-area { padding: 10px 20px calc(15px + env(safe-area-inset-bottom, 0px)); background: transparent; }
+    .input-area { padding: 10px 20px 15px; background: transparent; }
     .input-wrapper { display: flex; gap: 8px; background: rgba(255,255,255,0.03); padding: 6px 10px; border-radius: 20px; border: 1px solid var(--border-strong); align-items: flex-end; backdrop-filter: var(--blur-md); transition: 0.3s; }
     .input-wrapper:focus-within { border-color: var(--accent-color); background: rgba(0,0,0,0.4); }
     .input-tools { display: flex; gap: 2px; padding-bottom: 2px; }
@@ -148,40 +169,34 @@
     .textarea-box::placeholder { color: var(--text-muted); }
     .btn-send { background: var(--accent-color); color: white; border: none; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; transition: 0.2s; margin-bottom: 2px;}
     #file-upload-input { display: none; }
-    #emoji-picker { position: absolute; bottom: calc(75px + env(safe-area-inset-bottom, 0px)); left: 20px; background: rgba(20,22,30,0.95); backdrop-filter: var(--blur-md); border: 1px solid var(--border-strong); border-radius: 12px; padding: 10px; width: 280px; box-shadow: var(--glass-shadow); display: none; grid-template-columns: repeat(6, 1fr); gap: 6px; z-index: 50; max-height: 200px; overflow-y: auto; }
+    #emoji-picker { position: absolute; bottom: 75px; left: 20px; background: rgba(20,22,30,0.95); backdrop-filter: var(--blur-md); border: 1px solid var(--border-strong); border-radius: 12px; padding: 10px; width: 280px; box-shadow: var(--glass-shadow); display: none; grid-template-columns: repeat(6, 1fr); gap: 6px; z-index: 50; max-height: 200px; overflow-y: auto; }
     .emoji-item { font-size: 20px; cursor: pointer; text-align: center; padding: 4px; border-radius: 6px; transition: 0.2s; }
+
+    /* Moments (动态) 样式 */
+    #moments-feed { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+    .moment-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border-strong); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; animation: slideUpFade 0.4s ease-out; }
+    .moment-header { display: flex; align-items: center; gap: 12px; }
+    .moment-avatar { width: 40px; height: 40px; border-radius: 12px; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; font-size: 16px; }
+    .moment-info { display: flex; flex-direction: column; }
+    .moment-name { font-weight: 600; color: #fff; font-size: 15px; }
+    .moment-time { font-size: 11px; color: var(--text-muted); }
+    .moment-body { font-size: 14px; line-height: 1.6; color: var(--text-main); word-break: break-word; }
+    .moment-actions { display: flex; gap: 15px; margin-top: 5px; }
+    .m-action-btn { background: transparent; border: none; color: var(--text-muted); display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; transition: 0.2s; }
+    .m-action-btn:hover { color: #fff; }
+    .m-action-btn.liked { color: var(--danger-color); }
+    .moment-comments { background: rgba(0,0,0,0.2); padding: 10px 12px; border-radius: 8px; font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
+
+    /* Security View 样式 */
+    .sec-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); padding: 20px; border-radius: 16px; margin-bottom: 20px; text-align: center; }
+    .sec-icon { font-size: 40px; color: var(--accent-color); margin-bottom: 10px; }
 
     /* WebRTC 语音通话 */
     #call-widget { position: fixed; top: calc(20px + env(safe-area-inset-top, 0px)); right: 20px; background: rgba(20, 22, 30, 0.95); backdrop-filter: var(--blur-md); border: 1px solid var(--border-strong); border-radius: 16px; padding: 12px 16px; display: none; align-items: center; gap: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); z-index: 9500; animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-    .call-avatar { width: 40px; height: 40px; border-radius: 12px; background: var(--call-neon); color: #000; font-weight: bold; display: flex; justify-content: center; align-items: center; font-size: 16px; box-shadow: 0 0 15px rgba(52, 211, 153, 0.3); }
+    .call-avatar { width: 40px; height: 40px; border-radius: 12px; background: var(--call-neon); color: #000; font-weight: bold; display: flex; justify-content: center; align-items: center; font-size: 16px; }
     .call-info { display: flex; flex-direction: column; min-width: 100px; }
     .call-name { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 2px; }
     .call-status { font-size: 11px; color: var(--call-neon); font-weight: 600; display: flex; align-items: center; gap: 4px; }
-    .call-status.ringing { color: #facc15; animation: blink 1.5s infinite; }
-    .call-actions { display: flex; gap: 8px; margin-left: 10px; }
-    .call-btn { width: 36px; height: 36px; border-radius: 50%; border: none; display: flex; justify-content: center; align-items: center; font-size: 14px; cursor: pointer; transition: 0.2s; color: #fff; }
-    .call-btn.accept { background: var(--success-color); } .call-btn.reject { background: var(--danger-color); }
-    @keyframes blink { 50% { opacity: 0.5; } }
-
-    /* Admin & Music */
-    #admin-dash, #music-dash { position: fixed; inset: 0; background: var(--bg-base); z-index: 7000; display: none; flex-direction: column; }
-    .ad-header, .m-header { padding: calc(16px + env(safe-area-inset-top, 0px)) 24px 16px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
-    .ad-body, .m-body { flex: 1; display: flex; overflow: hidden; }
-    .ad-sidebar, .m-left, .m-right { width: 280px; border-right: 1px solid var(--border-light); padding: 20px; overflow-y: auto; background: rgba(0,0,0,0.2); }
-    .ad-main, .m-center { flex: 1; padding: 24px; overflow-y: auto; }
-    .m-center { display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    .ad-btn { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; }
-    .ad-btn-warn { background: rgba(234, 179, 8, 0.15); color: #facc15; } .ad-btn-danger { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
-    .ad-viewer { background: rgba(0,0,0,0.4); border-radius: 12px; padding: 16px; height: 400px; overflow-y: auto; border: 1px solid var(--border-light); font-size: 13px; font-family: monospace; color: #a1a1aa; }
-    .m-lcd { background: #050a05; border: 2px solid #000; border-radius: 8px; padding: 15px; width: 100%; max-width: 350px; text-align: center; margin-bottom: 40px; }
-    .m-lcd-time { font-family: 'Share Tech Mono', monospace; font-size: 28px; font-weight: bold; color: #fff; }
-    .m-vinyl-wrap { width: 260px; height: 260px; border-radius: 50%; background: #000; border: 8px solid #222; position: relative; display: flex; justify-content: center; align-items: center; margin-bottom: 40px; }
-    .m-cover-art { width: 35%; height: 35%; border-radius: 50%; border: 3px solid #111; background: #333; z-index: 10; background-size: cover; background-position: center; position: relative;}
-    .m-vinyl-wrap.playing .m-cover-art { animation: m-spin 6s linear infinite; }
-    @keyframes m-spin { to { transform: rotate(360deg); } }
-    .m-controls { display: flex; align-items: center; gap: 20px; }
-    .m-ctrl-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: rgba(255,255,255,0.05); color: #fff; font-size: 16px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
-    .m-ctrl-play { width: 64px; height: 64px; background: var(--music-neon); color: #000; font-size: 20px; }
 
     @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes slideIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
@@ -189,7 +204,7 @@
     @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
     @media (max-width: 768px) {
-      .mobile-menu-btn { display: block; } #sidebar { position: fixed; height: 100dvh; transform: translateX(-100%); box-shadow: 10px 0 40px rgba(0,0,0,0.8); z-index: 200; width: 280px; } #sidebar.active { transform: translateX(0); } .message-group { max-width: 92%; } .chat-header { padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px; } #messages-view { padding: 16px; gap: 12px; } .ad-body, .m-body { flex-direction: column; overflow-y: auto;} .ad-sidebar, .m-left, .m-right { width: 100%; height: 250px; border-right: none; border-bottom: 1px solid var(--border-light); flex-shrink:0;} .m-center { height: 450px; flex-shrink:0;} #emoji-picker { width: calc(100vw - 40px); left: 20px; } #call-widget { right: 10px; left: 10px; top: calc(10px + env(safe-area-inset-top, 0px)); justify-content: space-between; }
+      .mobile-menu-btn { display: block; } .message-group { max-width: 92%; } .chat-header { padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px; } #messages-view { padding: 16px; gap: 12px; } #emoji-picker { width: calc(100vw - 40px); left: 20px; }
     }
   </style>
 </head>
@@ -200,7 +215,6 @@
   <div id="lightbox" onclick="closeLightbox()"><button class="lightbox-close"><i class="fa-solid fa-xmark"></i></button><img id="lightbox-img" src="" alt="预览" onclick="event.stopPropagation()"></div>
   <div id="context-menu"><div class="ctx-item" onclick="ctxAction('copy')"><i class="fa-solid fa-copy"></i> 复制内容</div><div style="height:1px; background:var(--border-strong); margin: 4px 0;"></div><div class="ctx-item" style="color:var(--danger-color)" onclick="ctxAction('delete')"><i class="fa-solid fa-eye-slash"></i> 本地隐藏</div></div>
 
-  <!-- WebRTC 语音通话 -->
   <div id="call-widget">
     <div style="display:flex; align-items:center; gap:12px;">
       <div class="call-avatar" id="call-avatar">U</div>
@@ -210,13 +224,12 @@
       </div>
     </div>
     <div class="call-actions">
-      <button class="call-btn accept" id="btn-accept-call" style="display:none;" onclick="acceptCall()"><i class="fa-solid fa-phone"></i></button>
-      <button class="call-btn reject" id="btn-reject-call" onclick="endCall()"><i class="fa-solid fa-phone-slash"></i></button>
+      <button class="call-btn accept" id="btn-accept-call" style="display:none; background:var(--success-color); border:none; padding:10px; border-radius:50%; color:#fff;" onclick="acceptCall()"><i class="fa-solid fa-phone"></i></button>
+      <button class="call-btn reject" id="btn-reject-call" style="background:var(--danger-color); border:none; padding:10px; border-radius:50%; color:#fff;" onclick="endCall()"><i class="fa-solid fa-phone-slash"></i></button>
     </div>
     <audio id="remote-audio" autoplay playsinline style="display:none;"></audio>
   </div>
 
-  <!-- 个人档案面板 -->
   <div id="profile-dash">
     <div class="profile-card-lg" id="profile-card-inner">
       <div class="profile-header-bg">
@@ -236,18 +249,16 @@
     </div>
   </div>
 
-  <!-- 军工级身份验证网关 (包含 2FA) -->
   <div id="auth-screen">
     <div class="auth-card">
-      <div class="auth-brand"><i class="fa-brands fa-space-awesome"></i></div>
+      <div class="auth-brand"><i class="fa-brands fa-space-awesome" style="font-size:30px; color:var(--accent-color); margin-bottom:10px;"></i></div>
       <h2>JR System</h2>
-      <div style="color:var(--text-muted); font-size:12px; margin-bottom:20px;">安全网关 V8.1 · 手动绑定 2FA</div>
+      <div style="color:var(--text-muted); font-size:12px; margin-bottom:20px;">安全网关 V9.0 · WebAuthn 通行密钥</div>
       
-      <!-- 主界面 -->
       <div id="auth-main-ui">
         <div class="auth-input-group">
           <i class="fa-solid fa-user"></i>
-          <input type="text" id="auth-usr" class="auth-input" placeholder="特工代号 (Username)" autocomplete="off">
+          <input type="text" id="auth-usr" class="auth-input" placeholder="特工代号 (Username)" autocomplete="username">
         </div>
         <div class="auth-input-group reg-only forgot-only" style="display:none;">
           <i class="fa-solid fa-envelope"></i>
@@ -259,124 +270,136 @@
         </div>
         <div class="auth-input-group default-only reg-only forgot-only">
           <i class="fa-solid fa-lock"></i>
-          <input type="password" id="auth-pwd" class="auth-input" placeholder="存取密钥 (Password)">
+          <input type="password" id="auth-pwd" class="auth-input" placeholder="存取密钥 (Password)" autocomplete="current-password">
         </div>
         
         <button class="auth-btn default-only" id="btn-login" onclick="execLogin()">建立连接</button>
+        <button class="auth-btn default-only" id="btn-passkey-login" onclick="loginWithPasskey()" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-strong); margin-top:10px; color:#fff; box-shadow:none;">
+          <i class="fa-brands fa-apple" style="font-size:18px;"></i> 通行密钥一键安全登录
+        </button>
+        
         <button class="auth-btn reg-only" id="btn-register" onclick="execRegister()" style="display:none; background:#0ea5e9;">注册特工</button>
         <button class="auth-btn forgot-only" id="btn-get-code" onclick="requestCode()" style="display:none; background:#f59e0b;">获取验证码</button>
         <button class="auth-btn forgot-only" id="btn-reset-pwd" onclick="execResetPwd()" style="display:none; background:#10b981;">重设密钥</button>
 
-        <div style="display:flex; justify-content:space-between; margin-top:15px; font-size:13px; color:var(--text-muted);">
+        <div style="display:flex; justify-content:space-between; margin-top:20px; font-size:13px; color:var(--text-muted);">
           <span class="auth-switch" onclick="switchAuthMode('register')" id="switch-reg">注册新特工</span>
           <span class="auth-switch" onclick="switchAuthMode('login')" id="switch-log" style="display:none;">返回登录</span>
           <span class="auth-switch" onclick="switchAuthMode('forgot')" id="switch-fgt">忘记密码？</span>
         </div>
       </div>
 
-      <!-- 2FA 强制绑定界面 (已去除二维码，只留 Text Key) -->
       <div id="auth-setup-2fa-ui" style="display:none;">
         <h3 style="color:var(--music-neon); margin-bottom:10px;"><i class="fa-solid fa-shield-halved"></i> 绑定身份验证器</h3>
-        <p style="font-size:12px; color:gray; margin-bottom:15px;">为保障您的账户绝对安全，初次进入系统前，请将以下密钥手动输入到 <b>Google Authenticator</b> 或其他身份验证器中进行绑定。</p>
-        
-        <!-- 核心改动：放大文本，醒目展示 -->
+        <p style="font-size:12px; color:gray; margin-bottom:15px;">初次进入系统前，请将以下密钥手动输入到 <b>Authenticator</b> 中。</p>
         <div style="font-size:18px; color:#a5b4fc; font-weight:bold; font-family:monospace; margin-bottom:20px; user-select:all; word-break:break-all; background:rgba(0,0,0,0.4); padding:15px; border-radius:10px; border:1px dashed var(--border-strong);" id="secret-key-text" title="双击选中复制"></div>
-        
         <div class="auth-input-group">
           <input type="text" id="setup-2fa-code" class="modal-input-field" placeholder="输入 6 位动态密码" autocomplete="off" maxlength="6" style="margin-bottom:0; text-align: center; letter-spacing: 4px; font-size: 18px;">
         </div>
         <button class="auth-btn" style="background:var(--success-color);" onclick="submit2FASetup()">验证并绑定</button>
         <div class="auth-switch" onclick="cancel2FA()">返回登录</div>
       </div>
-
-      <!-- 2FA 动态密码校验界面 -->
       <div id="auth-verify-2fa-ui" style="display:none;">
         <h3 style="color:var(--success-color); margin-bottom:10px;"><i class="fa-solid fa-shield-halved"></i> 双重安全验证</h3>
-        <p style="font-size:12px; color:gray; margin-bottom:20px;">系统检测到您已开启防护矩阵。请输入身份验证器中的动态密码以解除安全锁定。</p>
+        <p style="font-size:12px; color:gray; margin-bottom:20px;">请输入身份验证器中的动态密码以解除安全锁定。</p>
         <div class="auth-input-group">
           <input type="text" id="verify-2fa-code" class="modal-input-field" placeholder="输入 6 位动态密码" autocomplete="off" maxlength="6" style="margin-bottom:0; text-align: center; letter-spacing: 4px; font-size: 18px;">
         </div>
         <button class="auth-btn" style="background:var(--success-color);" onclick="submit2FAVerify()">解密登入</button>
         <div class="auth-switch" onclick="cancel2FA()">返回重试</div>
       </div>
-
     </div>
   </div>
 
-  <!-- App 主框架 -->
-  <div id="app-container">
-    <aside id="sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-brand"><i class="fa-brands fa-strikethrough" style="color:var(--accent-color);"></i> JR Chat</div>
-        <button class="theme-toggle" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i></button>
-      </div>
-      <div class="sidebar-scroll" id="nav-list"></div>
-      <div class="sidebar-footer">
-        <div class="profile-card" onclick="viewProfile(currUser)">
-          <div class="profile-avatar" id="my-avatar">X</div>
-          <div class="profile-info">
-            <div class="profile-name" id="my-name">Agent</div>
-            <div class="profile-status">安全加密</div>
-          </div>
-          <button class="logout-btn" onclick="execLogout(); event.stopPropagation();" title="断开注销"><i class="fa-solid fa-power-off"></i></button>
-        </div>
-        <div class="quick-actions">
-          <button class="q-btn" onclick="openModal('createGroup')"><i class="fa-solid fa-plus"></i> 建群</button>
-          <button class="q-btn" onclick="openModal('joinGroup')"><i class="fa-solid fa-satellite"></i> 搜群</button>
-          <button class="q-btn full" onclick="openModal('addFriend')"><i class="fa-solid fa-user-astronaut"></i> 建立通讯羁绊</button>
-          <button class="q-btn full music" onclick="document.getElementById('music-dash').style.display='flex'"><i class="fa-solid fa-compact-disc"></i> 启动音乐系统</button>
-          <button class="q-btn full admin" id="btn-admin" onclick="openAdmin()"><i class="fa-solid fa-skull-crossbones"></i> ROOT 管理台</button>
-        </div>
-      </div>
-    </aside>
+  <nav id="app-tab-bar">
+    <button class="tab-btn active" onclick="switchTab('chat')"><i class="fa-solid fa-comment-dots"></i><span>聊天</span></button>
+    <button class="tab-btn" onclick="switchTab('moments')"><i class="fa-solid fa-camera-retro"></i><span>动态</span></button>
+    <button class="tab-btn" onclick="viewProfile(currUser)"><i class="fa-solid fa-user-astronaut"></i><span>我的信息</span></button>
+    <button class="tab-btn" onclick="switchTab('security')"><i class="fa-solid fa-shield-halved"></i><span>安全设置</span></button>
+  </nav>
 
-    <main id="main-chat">
-      <header class="chat-header">
-        <div class="header-info">
-          <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.add('active'); event.stopPropagation();"><i class="fa-solid fa-bars-staggered"></i></button>
-          <div class="chat-title-group">
-            <div class="chat-title" id="room-title"><i class="fa-solid fa-hashtag" style="color:var(--text-muted)"></i> 大厅</div>
-            <div class="chat-subtitle" id="room-subtitle">ID: General</div>
+  <div id="app-container">
+    
+    <div id="view-chat" class="app-view active">
+      <aside id="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-brand"><i class="fa-brands fa-strikethrough" style="color:var(--accent-color);"></i> JR Chat</div>
+          <button class="theme-toggle" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i></button>
+        </div>
+        <div class="sidebar-scroll" id="nav-list"></div>
+        <div class="sidebar-footer">
+          <div class="quick-actions">
+            <button class="q-btn" onclick="openModal('createGroup')"><i class="fa-solid fa-plus"></i> 建群</button>
+            <button class="q-btn" onclick="openModal('joinGroup')"><i class="fa-solid fa-satellite"></i> 搜群</button>
+            <button class="q-btn full" onclick="openModal('addFriend')"><i class="fa-solid fa-user-plus"></i> 添加好友</button>
           </div>
         </div>
-        <div class="header-actions" id="room-tools"></div>
-      </header>
-      
-      <div id="messages-view"></div>
-      
-      <input type="file" id="file-upload-input" accept="image/*" style="display:none;">
-      <div id="emoji-picker"></div>
-      
-      <div class="input-area">
-        <div class="input-wrapper" id="input-wrap">
-          <div class="input-tools">
-            <button class="tool-icon" id="btn-emoji"><i class="fa-regular fa-face-smile"></i></button>
-            <button class="tool-icon" id="btn-upload"><i class="fa-solid fa-image"></i></button>
+      </aside>
+
+      <main id="main-chat">
+        <header class="chat-header">
+          <div class="header-info">
+            <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.add('active'); event.stopPropagation();"><i class="fa-solid fa-bars-staggered"></i></button>
+            <div class="chat-title-group">
+              <div class="chat-title" id="room-title"><i class="fa-solid fa-hashtag" style="color:var(--text-muted)"></i> 大厅</div>
+              <div class="chat-subtitle" id="room-subtitle">ID: General</div>
+            </div>
           </div>
-          <textarea class="textarea-box" id="msg-input" rows="1" placeholder="输入消息..."></textarea>
-          <div class="send-action">
+          <div class="header-actions" id="room-tools"></div>
+        </header>
+        <div id="messages-view"></div>
+        <input type="file" id="file-upload-input" accept="image/*" style="display:none;">
+        <div id="emoji-picker"></div>
+        <div class="input-area">
+          <div class="input-wrapper" id="input-wrap">
+            <div class="input-tools">
+              <button class="tool-icon tool-btn" id="btn-emoji"><i class="fa-regular fa-face-smile"></i></button>
+              <button class="tool-icon tool-btn" id="btn-upload"><i class="fa-solid fa-image"></i></button>
+            </div>
+            <textarea class="textarea-box" id="msg-input" rows="1" placeholder="输入消息..."></textarea>
             <button class="btn-send" id="btn-send"><i class="fa-solid fa-paper-plane"></i></button>
           </div>
         </div>
+      </main>
+    </div>
+
+    <div id="view-moments" class="app-view">
+      <div class="chat-header" style="justify-content:space-between; position:sticky; top:0; z-index:10;">
+        <div class="chat-title"><i class="fa-solid fa-camera-retro" style="color:var(--text-muted)"></i> 特工动态</div>
+        <button class="tool-btn" style="color:var(--accent-color);" onclick="openPostMomentModal()"><i class="fa-solid fa-pen-to-square"></i></button>
       </div>
-    </main>
+      <div id="moments-feed"></div>
+    </div>
+
+    <div id="view-security" class="app-view" style="align-items:center; overflow-y:auto; padding: 20px;">
+      <div class="chat-header" style="width:100%; border:none; background:transparent; padding:0; margin-bottom:30px;">
+        <div class="chat-title" style="font-size:22px;"><i class="fa-solid fa-shield-halved"></i> 帐户安全中心</div>
+      </div>
+      
+      <div class="sec-card" style="width:100%; max-width:400px;">
+        <div class="sec-icon"><i class="fa-brands fa-apple"></i></div>
+        <h3 style="color:#fff; margin-bottom:8px;">Apple 通行密钥 (WebAuthn)</h3>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:20px; line-height:1.5;">绑定通行密钥后，您将可以使用 Face ID 或 Touch ID 一键安全登入本系统，彻底告别繁琐的密码。</p>
+        <button class="auth-btn" style="background:#fff; color:#000; font-weight:800; border-radius:30px;" onclick="setupPasskey()"><i class="fa-solid fa-fingerprint"></i> 立即绑定通行密钥</button>
+      </div>
+      
+      <div class="sec-card" style="width:100%; max-width:400px;">
+        <div class="sec-icon" style="color:var(--danger-color);"><i class="fa-solid fa-power-off"></i></div>
+        <h3 style="color:#fff; margin-bottom:8px;">退出系统</h3>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">清空本地安全密钥与会话令牌，断开与系统的连接。</p>
+        <button class="auth-btn" style="background:var(--danger-bg); color:var(--danger-color); border-radius:30px;" onclick="execLogout()"><i class="fa-solid fa-right-from-bracket"></i> 安全注销</button>
+      </div>
+    </div>
+
   </div>
 
-  <!-- Admin & Music -->
-  <div id="admin-dash"><div class="ad-header"><h2 style="font-size:18px;"><i class="fa-solid fa-terminal"></i> 根节点仪表板</h2><button class="ad-btn ad-btn-warn" onclick="document.getElementById('admin-dash').style.display='none'">关闭</button></div><div class="ad-body"><div class="ad-sidebar" id="ad-user-list"></div><div class="ad-main"><div style="display:flex;gap:10px;margin-bottom:20px;"><input type="text" id="ad-search" class="modal-input-field" placeholder="目标房间 ID" style="margin:0;max-width:200px;"><button class="ad-btn ad-btn-warn" onclick="adminFetch()">检索数据流</button></div><div id="ad-viewer" class="ad-viewer">等待系统指令...</div></div></div></div>
-  <div id="music-dash"><div class="m-header"><h2 style="font-size:18px; color:#fff; font-weight:800;"><i class="fa-solid fa-music" style="color:var(--music-neon);"></i> 音乐子系统</h2><button class="m-btn cancel" style="color:#fff; background:rgba(255,255,255,0.1);" onclick="document.getElementById('music-dash').style.display='none'">隐藏 (后台播放)</button></div><div class="m-body"><div class="m-panel m-left"><div style="font-size:10px; color:var(--music-neon); font-family:'Share Tech Mono', monospace; font-weight:bold; letter-spacing:1px; margin-bottom:10px;">GitHub Repo 同步</div><div style="display:flex; gap:5px; margin-bottom:10px;"><input type="text" id="m-gh-user" class="modal-input-field" style="margin:0;padding:8px;" placeholder="GitHub User"><input type="text" id="m-gh-repo" class="modal-input-field" style="margin:0;padding:8px;" placeholder="Repo"></div><button class="ad-btn ad-btn-warn" style="width:100%;margin-bottom:10px;" id="m-btn-sync">执行同步</button><div id="m-nav" style="display:flex;gap:5px;overflow-x:auto;"></div><ul id="m-track-list" style="list-style:none; margin-top:10px; font-size:13px; color:gray;"></ul></div><div class="m-panel m-center"><div class="m-lcd"><div id="m-title" style="color:var(--music-neon);margin-bottom:5px;font-weight:bold;">待机</div><div id="m-time" class="m-lcd-time">00:00:00</div></div><div class="m-vinyl-wrap" id="m-vinyl"><div class="m-cover-art" id="m-cover"><span id="m-emoji" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px;">💿</span></div></div><div class="m-controls"><button class="m-ctrl-btn" id="m-btn-prev"><i class="fa-solid fa-backward-step"></i></button><button class="m-ctrl-btn m-ctrl-play" id="m-btn-play"><i class="fa-solid fa-play" id="m-play-icon"></i></button><button class="m-ctrl-btn" id="m-btn-next"><i class="fa-solid fa-forward-step"></i></button></div></div><div class="m-panel m-right"><div id="m-lyric-status" style="text-align:center;font-size:12px;color:var(--music-neon);">歌词深度扫描</div><div id="m-lyric-container" style="flex:1;overflow-y:auto;text-align:center;padding:50% 0; -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 15%, #000 85%, transparent 100%);"><div id="m-lyric-content" style="color:gray;font-size:12px;">等待音频流注入...</div></div></div></div><audio id="m-audio" playsinline></audio></div>
-
-  <!-- Scripts -->
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
     let authSessionToken = '', currUser = '', currRoom = '', onlineSet = [];
     let currentTheme = localStorage.getItem('jrchat_theme') || 'dark'; applyTheme(currentTheme);
     let ctxTargetMessage = null, isEmojiVisible = false, viewingProfileUser = '';
-    
-    // 2FA 内存变量
     let loginTempUser = '', loginTempPwd = '', temp2faSecret = '';
-
     const emojis = ["😀","😂","🤣","😊","🥰","😎","🤩","😏","😒","😔","😭","😡","🤯","🥳","🤫","🤔","🙄","🤢","🤠","😈","👻","👽","🤖","💩","👍","👎","👏","🤝","🙏","💪","🔥","✨","🎉","💯","❤️","💔","📷","💻","🚀"];
 
     document.addEventListener('click', e => {
@@ -400,13 +423,72 @@
 
     function applyTheme(th) { document.documentElement.setAttribute('data-theme', th); document.getElementById('theme-color-meta').setAttribute('content', th==='amoled'?'#000000':'#0f111a'); localStorage.setItem('jrchat_theme', th); }
     function toggleTheme() { currentTheme=currentTheme==='dark'?'amoled':'dark'; applyTheme(currentTheme); }
-
     function genColor(str) { let h=0; for(let i=0;i<str.length;i++)h=str.charCodeAt(i)+((h<<5)-h); return `hsl(${h%360},70%,65%)`; }
     function sanitize(raw) { return raw.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#39;").replace(/"/g, "&quot;"); }
     function parseText(raw) { let t = sanitize(raw); t = t.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>'); return t.replace(/\n/g, '<br>'); }
 
     // ==========================================
-    // 🔐 军工级验证网关 (包含 TOTP 2FA)
+    // 底栏切换逻辑
+    // ==========================================
+    window.switchTab = (tabId) => {
+      document.querySelectorAll('.app-view').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(`view-${tabId}`).classList.add('active');
+      const btn = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
+      if(btn) btn.classList.add('active');
+      if(tabId === 'moments') socket.emit('fetch moments');
+    };
+
+    // ==========================================
+    // 🔐 WebAuthn Apple 通行密钥系统
+    // ==========================================
+    window.setupPasskey = async () => {
+      if (!window.PublicKeyCredential) return toast('您的设备不支持通行密钥', 'error');
+      try {
+        const challenge = new Uint8Array(32); crypto.getRandomValues(challenge);
+        const userid = new Uint8Array(16); crypto.getRandomValues(userid);
+        const credential = await navigator.credentials.create({
+          publicKey: {
+            challenge: challenge,
+            rp: { name: "JR System", id: window.location.hostname },
+            user: { id: userid, name: currUser, displayName: currUser },
+            pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
+            authenticatorSelection: { userVerification: "preferred" },
+            timeout: 60000,
+            attestation: "none"
+          }
+        });
+        socket.emit('setup passkey', { username: currUser, credentialId: credential.id });
+      } catch (err) { toast('设置通行密钥被取消或失败', 'error'); }
+    };
+
+    window.loginWithPasskey = async () => {
+      const u = document.getElementById('auth-usr').value.trim();
+      if(!u) return toast('请先输入特工代号识别身份', 'error');
+      socket.emit('request passkey login', { username: u });
+    };
+
+    socket.on('passkey challenge', async ({ challenge, passkeyId }) => {
+      try {
+        const chalArr = new Uint8Array(32);
+        for(let i=0; i<32; i++) chalArr[i] = challenge.charCodeAt(i) || 0;
+        const assertion = await navigator.credentials.get({
+          publicKey: {
+            challenge: chalArr,
+            rpId: window.location.hostname,
+            userVerification: "preferred",
+            timeout: 60000
+          }
+        });
+        const u = document.getElementById('auth-usr').value.trim();
+        socket.emit('verify passkey', { username: u, credentialId: assertion.id });
+      } catch(e) { toast('通行密钥验证取消或失败', 'error'); }
+    });
+
+    socket.on('passkey status updated', () => toast('通行密钥已生效', 'success'));
+
+    // ==========================================
+    // 🔐 验证网关 (传统/2FA)
     // ==========================================
     function switchAuthMode(mode) {
       const els = document.querySelectorAll('.default-only, .reg-only, .forgot-only'); els.forEach(el => el.style.display = 'none'); document.getElementById('switch-reg').style.display = 'none'; document.getElementById('switch-log').style.display = 'none'; document.getElementById('switch-fgt').style.display = 'none';
@@ -414,79 +496,41 @@
       else if (mode === 'register') { document.querySelectorAll('.reg-only').forEach(el => el.style.display = ''); document.getElementById('switch-log').style.display = ''; }
       else if (mode === 'forgot') { document.querySelectorAll('.forgot-only').forEach(el => el.style.display = ''); document.getElementById('btn-get-code').style.display = 'block'; document.getElementById('btn-reset-pwd').style.display = 'none'; document.getElementById('code-group').style.display = 'none'; document.getElementById('switch-log').style.display = ''; }
     }
-    
     function execLogin() { 
       const u=document.getElementById('auth-usr').value.trim(); const p=document.getElementById('auth-pwd').value.trim(); 
-      if(u&&p) { 
-        loginTempUser = u; loginTempPwd = p; 
-        socket.emit('login', { username: u, password: p, sessionToken: authSessionToken }); 
-      } else { toast('请输入特工代号与密钥', 'error'); }
+      if(u&&p) { loginTempUser = u; loginTempPwd = p; socket.emit('login', { username: u, password: p, sessionToken: authSessionToken }); } else { toast('请输入特工代号与密钥', 'error'); }
     }
-    
     function execRegister() { const u=document.getElementById('auth-usr').value.trim(), e=document.getElementById('auth-email').value.trim(), p=document.getElementById('auth-pwd').value.trim(); if(u&&e&&p){socket.emit('register',{username:u,email:e,password:p});}else toast('请填写完整信息','error'); }
     function requestCode() { const u=document.getElementById('auth-usr').value.trim(), e=document.getElementById('auth-email').value.trim(); if(!u || !e) return toast('请输入特工代号与邮箱', 'error'); socket.emit('request password reset', { username: u, email: e }); }
-    
     socket.on('reset code received', code => { document.getElementById('btn-get-code').style.display='none'; document.getElementById('btn-reset-pwd').style.display='block'; document.getElementById('code-group').style.display=''; document.getElementById('auth-email').closest('.auth-input-group').style.display='none'; document.getElementById('auth-pwd').value=''; document.getElementById('auth-pwd').placeholder='请输入全新密钥'; });
     function execResetPwd() { const u=document.getElementById('auth-usr').value.trim(), c=document.getElementById('auth-code').value.trim(), p=document.getElementById('auth-pwd').value.trim(); if(u&&c&&p) socket.emit('execute password reset', { username: u, code: c, newPassword: p }); }
 
-    // 【新增】2FA 拦截处理逻辑
-    socket.on('2fa setup required', data => {
-      document.getElementById('auth-main-ui').style.display = 'none';
-      document.getElementById('auth-setup-2fa-ui').style.display = 'block';
-      document.getElementById('secret-key-text').innerText = data.secret;
-      temp2faSecret = data.secret;
-    });
-
-    socket.on('2fa verification required', () => {
-      document.getElementById('auth-main-ui').style.display = 'none';
-      document.getElementById('auth-verify-2fa-ui').style.display = 'block';
-    });
-
-    window.submit2FASetup = () => {
-      const c = document.getElementById('setup-2fa-code').value.trim();
-      if(c.length !== 6) return toast('请输入 6 位数字动态密码', 'error');
-      socket.emit('setup 2fa', { username: loginTempUser, password: loginTempPwd, secret: temp2faSecret, code: c });
-    };
-
-    window.submit2FAVerify = () => {
-      const c = document.getElementById('verify-2fa-code').value.trim();
-      if(c.length !== 6) return toast('请输入 6 位数字动态密码', 'error');
-      socket.emit('verify 2fa', { username: loginTempUser, password: loginTempPwd, code: c });
-    };
-
-    window.cancel2FA = () => {
-      document.getElementById('auth-setup-2fa-ui').style.display = 'none';
-      document.getElementById('auth-verify-2fa-ui').style.display = 'none';
-      document.getElementById('auth-main-ui').style.display = 'block';
-      loginTempUser = ''; loginTempPwd = ''; temp2faSecret = '';
-      document.getElementById('setup-2fa-code').value = '';
-      document.getElementById('verify-2fa-code').value = '';
-    };
+    socket.on('2fa setup required', data => { document.getElementById('auth-main-ui').style.display = 'none'; document.getElementById('auth-setup-2fa-ui').style.display = 'block'; document.getElementById('secret-key-text').innerText = data.secret; temp2faSecret = data.secret; });
+    socket.on('2fa verification required', () => { document.getElementById('auth-main-ui').style.display = 'none'; document.getElementById('auth-verify-2fa-ui').style.display = 'block'; });
+    window.submit2FASetup = () => { const c = document.getElementById('setup-2fa-code').value.trim(); if(c.length !== 6) return toast('请输入 6 位数字动态密码', 'error'); socket.emit('setup 2fa', { username: loginTempUser, password: loginTempPwd, secret: temp2faSecret, code: c }); };
+    window.submit2FAVerify = () => { const c = document.getElementById('verify-2fa-code').value.trim(); if(c.length !== 6) return toast('请输入 6 位数字动态密码', 'error'); socket.emit('verify 2fa', { username: loginTempUser, password: loginTempPwd, code: c }); };
+    window.cancel2FA = () => { document.getElementById('auth-setup-2fa-ui').style.display = 'none'; document.getElementById('auth-verify-2fa-ui').style.display = 'none'; document.getElementById('auth-main-ui').style.display = 'block'; loginTempUser = ''; loginTempPwd = ''; temp2faSecret = ''; document.getElementById('setup-2fa-code').value = ''; document.getElementById('verify-2fa-code').value = ''; };
 
     socket.on('auth error', m => toast(m, 'error'));
     socket.on('auth success', m => { toast(m, 'success'); switchAuthMode('login'); });
     socket.on('system message', m => toast(m, 'info'));
 
-    // 【核心】登录成功处理，保存会话令牌用于后台静默刷新
     socket.on('login success', data => {
       currUser = data.username;
-      if(data.sessionToken) authSessionToken = data.sessionToken; // 接收安全免 2FA 令牌
-      
+      if(data.sessionToken) authSessionToken = data.sessionToken; 
       document.getElementById('auth-screen').style.opacity = 0; setTimeout(()=>document.getElementById('auth-screen').style.display='none',500);
-      document.getElementById('my-name').innerText = sanitize(currUser); updateAvatarUI(document.getElementById('my-avatar'), currUser, data.avatar);
-      if(data.role === 'admin') document.getElementById('btn-admin').style.display = 'flex';
+      updateAvatarUI(document.getElementById('prof-avatar'), currUser, data.avatar);
       if("Notification" in window && Notification.permission === "default") Notification.requestPermission();
       buildNavTree(data.groups, data.friends); if(!currRoom) routeTo('General', '大厅', 'group');
     });
 
     function execLogout() { customModal({title:'断开连接',desc:'确认清空安全密钥与会话令牌并退出系统？',hasInput:false,cClass:'danger',onOK:()=>{authSessionToken='';socket.disconnect();window.location.reload();}}); }
 
-    // 后台刷新带上 Token 绕过 2FA
     socket.on('update sidebar', () => { if(currUser&&authSessionToken) socket.emit('login', {username:currUser, password:'', sessionToken:authSessionToken}); });
     socket.on('online status update', users => { onlineSet=users; if(currUser&&authSessionToken) socket.emit('login', {username:currUser, password:'', sessionToken:authSessionToken}); });
 
     // ==========================================
-    // 🪪 个人档案与数据导出 (Profile & GDPR)
+    // 🪪 个人档案与数据导出 (Profile)
     // ==========================================
     function updateAvatarUI(el, name, base64Str) { if(base64Str) { el.style.backgroundImage = `url(${base64Str})`; el.innerText = ''; } else { el.style.backgroundImage = 'none'; el.style.background = genColor(name); el.innerText = sanitize(name)[0].toUpperCase(); } }
     window.viewProfile = (targetUser) => { viewingProfileUser = targetUser; socket.emit('fetch profile', { targetUser }); };
@@ -503,7 +547,7 @@
       } else {
         bioEl.readOnly = true; bioEl.style.borderBottom = 'none'; document.getElementById('prof-avatar').style.cursor = 'default'; document.getElementById('prof-avatar').title = '';
         const dmid = `DM_${[currUser, data.username].sort().join('_')}`;
-        acts.innerHTML = `<button class="p-btn primary" onclick="routeTo('${dmid}', '${data.username}', 'friend'); document.getElementById('profile-dash').style.opacity=0; setTimeout(()=>document.getElementById('profile-dash').style.display='none',300);"><i class="fa-solid fa-comment-dots"></i> 发送消息</button> <button class="p-btn secondary" style="color:var(--call-neon); border-color:var(--call-neon);" onclick="startCall('${data.username}'); document.getElementById('profile-dash').style.opacity=0; setTimeout(()=>document.getElementById('profile-dash').style.display='none',300);"><i class="fa-solid fa-phone"></i> 语音通话</button>`;
+        acts.innerHTML = `<button class="p-btn primary" onclick="routeTo('${dmid}', '${data.username}', 'friend'); document.getElementById('profile-dash').style.opacity=0; setTimeout(()=>document.getElementById('profile-dash').style.display='none',300); switchTab('chat');"><i class="fa-solid fa-comment-dots"></i> 发送消息</button> <button class="p-btn secondary" style="color:var(--call-neon); border-color:var(--call-neon);" onclick="startCall('${data.username}'); document.getElementById('profile-dash').style.opacity=0; setTimeout(()=>document.getElementById('profile-dash').style.display='none',300);"><i class="fa-solid fa-phone"></i> 语音通话</button>`;
       }
       dash.style.display = 'flex'; setTimeout(() => dash.style.opacity = 1, 10);
     });
@@ -520,11 +564,66 @@
     });
 
     // ==========================================
+    // 📷 动态 (Moments) 逻辑
+    // ==========================================
+    window.openPostMomentModal = () => {
+      customModal({
+        title: '发布动态', desc: '向网络分享您的特工状态', ph: '输入内容...', 
+        cText: '发布', fn: v => { if(v) socket.emit('post moment', { username: currUser, content: v }); }
+      });
+    };
+
+    socket.on('moments loaded', moments => renderMoments(moments));
+    socket.on('new moment', moment => { socket.emit('fetch moments'); });
+    socket.on('update moment', moment => { socket.emit('fetch moments'); });
+
+    window.openCommentModal = (momentId) => {
+      customModal({
+        title: '发表评论', desc: '请输入您的评论内容', ph: '友好交流...',
+        cText: '提交', fn: v => { if(v) socket.emit('comment moment', { username: currUser, momentId, text: v }); }
+      });
+    };
+
+    function renderMoments(moments) {
+      const feed = document.getElementById('moments-feed');
+      feed.innerHTML = '';
+      if(moments.length === 0) feed.innerHTML = '<div style="color:var(--text-muted);text-align:center;margin-top:20px;">暂无动态数据</div>';
+      moments.forEach(m => {
+        const isLiked = m.likes.includes(currUser);
+        const el = document.createElement('div'); el.className = 'moment-card';
+        el.innerHTML = `
+          <div class="moment-header">
+            <div class="moment-avatar" style="background:${m.avatar ? `url(${m.avatar})` : genColor(m.username)}" onclick="viewProfile('${m.username}')">${m.avatar ? '' : m.username[0].toUpperCase()}</div>
+            <div class="moment-info">
+              <div class="moment-name">${sanitize(m.username)}</div>
+              <div class="moment-time">${new Date(m.timestamp).toLocaleString()}</div>
+            </div>
+          </div>
+          <div class="moment-body">${parseText(m.content)}</div>
+          <div class="moment-actions">
+            <button class="m-action-btn ${isLiked?'liked':''}" onclick="socket.emit('like moment', {username: '${currUser}', momentId: '${m._id}'})">
+              <i class="fa-${isLiked?'solid':'regular'} fa-heart"></i> ${m.likes.length}
+            </button>
+            <button class="m-action-btn" onclick="openCommentModal('${m._id}')">
+              <i class="fa-regular fa-comment"></i> ${m.comments.length}
+            </button>
+          </div>
+          ${m.comments.length > 0 ? `
+          <div class="moment-comments">
+            ${m.comments.map(c => `<div><span style="color:var(--accent-color);font-weight:600;">${sanitize(c.username)}:</span> <span style="color:var(--text-secondary);">${sanitize(c.text)}</span></div>`).join('')}
+          </div>
+          ` : ''}
+        `;
+        feed.appendChild(el);
+      });
+    }
+
+    // ==========================================
     // 📞 WebRTC 语音通话
     // ==========================================
     let localStream=null, peerConnection=null, currentCallTarget=null, isCallActive=false;
-    const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }, { urls: 'stun:stun.stunprotocol.org:3478' }]};
-    const callWidget = document.getElementById('call-widget'), callAvatar = document.getElementById('call-avatar'), callName = document.getElementById('call-name'), callStatus = document.getElementById('call-status'), btnAcceptCall = document.getElementById('btn-accept-call'), btnRejectCall = document.getElementById('btn-reject-call'), remoteAudio = document.getElementById('remote-audio');
+    const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }]};
+    const callWidget = document.getElementById('call-widget'), callAvatar = document.getElementById('call-avatar'), callName = document.getElementById('call-name'), callStatus = document.getElementById('call-status'), btnAcceptCall = document.getElementById('btn-accept-call');
 
     window.startCall = (targetUser) => {
       if(isCallActive) return toast('您已在通话中', 'error');
@@ -536,9 +635,9 @@
     function showCallUI(name, status, isCallingOut) {
       callWidget.style.display = 'flex'; callName.innerText = sanitize(name); callAvatar.innerText = sanitize(name)[0].toUpperCase(); callAvatar.style.background = genColor(name);
       callStatus.innerHTML = `<i class="fa-solid fa-satellite-dish"></i> ${status}`;
-      if(status==='正在呼叫...' || status==='即将接通...') { callStatus.className='call-status ringing'; btnAcceptCall.style.display='none'; }
-      else if(status==='收到来电') { callStatus.className='call-status ringing'; btnAcceptCall.style.display='flex'; }
-      else { callStatus.className='call-status'; callStatus.innerHTML=`<i class="fa-solid fa-microphone"></i> 通话进行中`; btnAcceptCall.style.display='none'; }
+      if(status==='正在呼叫...' || status==='即将接通...') { btnAcceptCall.style.display='none'; }
+      else if(status==='收到来电') { btnAcceptCall.style.display='flex'; }
+      else { callStatus.innerHTML=`<i class="fa-solid fa-microphone"></i> 通话进行中`; btnAcceptCall.style.display='none'; }
     }
 
     function cleanupCall() {
@@ -561,8 +660,8 @@
         
         peerConnection.onicecandidate = e => { if(e.candidate) socket.emit('webrtc signal', { sender: currUser, target: targetUser, signal: { type: 'candidate', candidate: e.candidate }}); };
         peerConnection.ontrack = e => { 
-          remoteAudio.srcObject = e.streams[0]; 
-          remoteAudio.play().catch(err => { toast("点击屏幕任意处以启用语音", "error"); const unlockAudio = () => { remoteAudio.play(); document.removeEventListener('click', unlockAudio); }; document.addEventListener('click', unlockAudio); });
+          document.getElementById('remote-audio').srcObject = e.streams[0]; 
+          document.getElementById('remote-audio').play().catch(err => toast("点击屏幕启用语音", "error"));
           showCallUI(targetUser, '通话中', false); isCallActive = true; 
         };
 
@@ -570,14 +669,8 @@
       } catch(e) { toast('麦克风权限被拒', 'error'); endCall(); }
     }
 
-    socket.on('incoming call', ({ caller }) => {
-      if(isCallActive) return socket.emit('call response', { caller, callee: currUser, accepted: false });
-      currentCallTarget = caller; showCallUI(caller, '收到来电', false);
-    });
-    socket.on('call response', ({ callee, accepted }) => {
-      if(accepted) { showCallUI(callee, '即将接通...', true); initWebRTC(callee, true); }
-      else { toast(`${sanitize(callee)} 拒绝了来电`, 'error'); cleanupCall(); }
-    });
+    socket.on('incoming call', ({ caller }) => { if(isCallActive) return socket.emit('call response', { caller, callee: currUser, accepted: false }); currentCallTarget = caller; showCallUI(caller, '收到来电', false); });
+    socket.on('call response', ({ callee, accepted }) => { if(accepted) { showCallUI(callee, '即将接通...', true); initWebRTC(callee, true); } else { toast(`${sanitize(callee)} 拒绝了来电`, 'error'); cleanupCall(); } });
     socket.on('webrtc signal', async ({ sender, signal }) => {
       if(sender !== currentCallTarget || !peerConnection) return;
       try {
@@ -594,13 +687,17 @@
     function buildNavTree(groups, friends) {
       const box = document.getElementById('nav-list'); box.innerHTML = '<div class="section-title">网络阵地 (Hubs)</div>';
       groups.forEach(g => {
-        const div = document.createElement('div'); div.className = `nav-item ${currRoom === g.groupId ? 'active' : ''}`; div.dataset.id = g.groupId; div.dataset.name = g.groupName; div.dataset.type = 'group';
-        div.innerHTML = `<i class="fa-solid fa-hashtag"></i> ${sanitize(g.groupName)}`; div.onclick = function() { routeTo(this.dataset.id, this.dataset.name, this.dataset.type); }; box.appendChild(div);
+        const btn = document.createElement('button'); // 修正 iPad 无法点击的问题：改为 button 并添加样式
+        btn.className = `nav-item ${currRoom === g.groupId ? 'active' : ''}`; btn.dataset.id = g.groupId; btn.dataset.name = g.groupName; btn.dataset.type = 'group';
+        btn.style.background = 'transparent'; btn.style.border = 'none'; btn.style.width = '100%';
+        btn.innerHTML = `<i class="fa-solid fa-hashtag"></i> ${sanitize(g.groupName)}`; btn.onclick = function() { routeTo(this.dataset.id, this.dataset.name, this.dataset.type); }; box.appendChild(btn);
       });
       box.innerHTML += '<div class="section-title" style="margin-top:15px;">私人连接 (Links)</div>';
       friends.forEach(f => {
-        const dmid = `DM_${[currUser, f].sort().join('_')}`; const div = document.createElement('div'); div.className = `nav-item ${onlineSet.includes(f)?'is-online':''} ${currRoom === dmid ? 'active' : ''}`;
-        div.dataset.id = dmid; div.dataset.name = f; div.dataset.type = 'friend'; div.innerHTML = `<i class="fa-solid fa-user-astronaut"></i> ${sanitize(f)} <div class="status-dot"></div>`; div.onclick = function() { routeTo(this.dataset.id, this.dataset.name, this.dataset.type); }; box.appendChild(div);
+        const dmid = `DM_${[currUser, f].sort().join('_')}`; const btn = document.createElement('button'); 
+        btn.className = `nav-item ${onlineSet.includes(f)?'is-online':''} ${currRoom === dmid ? 'active' : ''}`;
+        btn.dataset.id = dmid; btn.dataset.name = f; btn.dataset.type = 'friend'; btn.style.background = 'transparent'; btn.style.border = 'none'; btn.style.width = '100%';
+        btn.innerHTML = `<i class="fa-solid fa-user-astronaut"></i> ${sanitize(f)} <div class="status-dot"></div>`; btn.onclick = function() { routeTo(this.dataset.id, this.dataset.name, this.dataset.type); }; box.appendChild(btn);
       });
     }
 
@@ -655,45 +752,6 @@
         <div class="msg-body"><div class="msg-meta">${!isMe?`<span class="msg-sender" onclick="viewProfile('${sanitize(m.sender)}')">${sanitize(m.sender)}</span>`:''}<span class="msg-time">${t}</span></div>${h}</div>`;
       v.appendChild(w);
     }
-
-    // ==========================================
-    // [Admin 上帝控制台]
-    // ==========================================
-    window.openAdmin = () => { document.getElementById('admin-dash').style.display='flex'; socket.emit('admin fetch data', currUser); };
-    socket.on('admin data loaded', ({users}) => {
-      const l = document.getElementById('ad-user-list'); l.innerHTML='<div style="color:gray;font-size:12px;margin-bottom:10px;">系统节点</div>';
-      users.forEach(u => {
-        if(u.username==='admin')return;
-        l.innerHTML += `<div class="user-card"><div><div style="color:#fff;font-weight:600;font-size:13px;">${sanitize(u.username)} ${u.isBanned?'<i class="fa-solid fa-ban" style="color:red"></i>':''}</div><div style="font-size:10px;color:gray;">群组:${u.groups.length} 连接:${u.friends.length}</div></div><div style="display:flex;flex-direction:column;gap:4px;"><button class="ad-btn ${u.isBanned?'ad-btn-warn':'ad-btn-danger'}" onclick="socket.emit('admin toggle ban',{adminUser:'${currUser}',targetUser:'${u.username}',banStatus:${!u.isBanned}});setTimeout(openAdmin,500);">${u.isBanned?'解封':'封禁'}</button><button class="ad-btn" style="background:rgba(96,165,250,0.1);color:#60a5fa;" onclick="const p=prompt('强制重置密码:');if(p)socket.emit('admin reset password',{adminUser:'${currUser}',targetUser:'${u.username}',newPassword:p})">改密</button></div></div>`;
-      });
-    });
-    window.adminFetch = () => { const r=document.getElementById('ad-search').value.trim(); if(r)socket.emit('admin fetch room history',{adminUser:currUser,roomId:r}); };
-    socket.on('admin room history loaded', msgs => {
-      const b=document.getElementById('ad-viewer'); b.innerHTML='';
-      if(!msgs.length)return b.innerHTML='该区域没有资料。';
-      msgs.forEach(m=>{ const d=new Date(m.timestamp).toISOString().split('T'); b.innerHTML+=`<div style="margin-bottom:4px;border-bottom:1px dashed #333;padding-bottom:4px;"><span style="color:#34d399;">[${d[1].substring(0,8)}]</span> <span style="color:#6366f1;">${sanitize(m.sender)}</span> > <span style="color:gray;">${m.msgType==='text'?sanitize(m.text):'[图像]'}</span></div>`; });
-      b.scrollTop = b.scrollHeight;
-    });
-
-    // ==========================================
-    // [🎵 JR Music 引擎]
-    // ==========================================
-    const mAudio = document.getElementById('m-audio'), mTitle = document.getElementById('m-title'), mTime = document.getElementById('m-time'), mPlayBtn = document.getElementById('m-btn-play'), mPlayIcon = document.getElementById('m-play-icon'), mNextBtn = document.getElementById('m-btn-next'), mPrevBtn = document.getElementById('m-btn-prev'), mCover = document.getElementById('m-cover'), mEmoji = document.getElementById('m-emoji'), mVinylWrap = document.getElementById('m-vinyl'), mNavWrap = document.getElementById('m-nav'), mTrackList = document.getElementById('m-track-list'), lyricBox = document.getElementById('m-lyric-content'), lyricWrap = document.getElementById('m-lyric-container'), lyricStatus = document.getElementById('m-lyric-status'), ghUserInp = document.getElementById('m-gh-user'), ghRepoInp = document.getElementById('m-gh-repo'), mBtnSync = document.getElementById('m-btn-sync');
-    let mPlaylists = {}, mCurList = 'Root', mFiltered = [], mCurIdx = 0, mCoverURL = null, mParsedLyrics = [], mCurLyricIdx = -1, mIsSynced = false;
-    ghUserInp.value = localStorage.getItem('jrmusic_gh_user') || 'zhangzhanhang855'; ghRepoInp.value = localStorage.getItem('jrmusic_gh_repo') || 'musiconly';
-    const filterAudio = items => items.filter(f => /\.(mp3|flac|wav|m4a)$/i.test(f.name)).map(f => ({ t: f.name.replace(/\.[^/.]+$/, ''), u: f.download_url }));
-    
-    const renderMNav = () => { mNavWrap.innerHTML = Object.keys(mPlaylists).map(n => `<button style="background:transparent;border:1px solid #333;color:gray;font-size:10px;padding:4px;border-radius:4px;" data-name="${n}">${n}</button>`).join(''); mNavWrap.querySelectorAll('button').forEach(b => b.onclick = () => { mCurList = b.dataset.name; mFiltered = [...mPlaylists[mCurList]]; renderMList(); if(mFiltered.length>0) mLoad(0, false); }); };
-    const renderMList = () => { mTrackList.innerHTML = mFiltered.map((s, i) => `<li style="padding:8px;border-bottom:1px solid #333;cursor:pointer;${mCurIdx===i?'color:#00f2ff':''}" data-idx="${i}">${s.t}</li>`).join(''); mTrackList.querySelectorAll('li').forEach(item => item.onclick = () => mLoad(parseInt(item.dataset.idx), true)); };
-    
-    mBtnSync.onclick = async () => { const u = ghUserInp.value.trim(); const r = ghRepoInp.value.trim(); if(!u || !r) return; try { mAudio.pause(); mTitle.innerText = '同步中...'; mPlaylists = {}; const res = await fetch(`https://api.github.com/repos/${u}/${r}/contents/`); const items = await res.json(); mPlaylists['Root'] = filterAudio(items); const dirs = items.filter(i => i.type === 'dir'); for(let d of dirs) { const sub = await (await fetch(d.url)).json(); const tracks = filterAudio(sub); if(tracks.length>0) mPlaylists[d.name] = tracks; } localStorage.setItem('jrmusic_gh_user', u); localStorage.setItem('jrmusic_gh_repo', r); mTitle.innerText = '就绪'; renderMNav(); mCurList = 'Root'; mFiltered = [...mPlaylists['Root']]; renderMList(); } catch(e) { mTitle.innerText = '同步失败'; } };
-    if(ghUserInp.value) mBtnSync.click();
-    
-    const mLoad = (idx, autoPlay) => { if(mFiltered.length === 0) return; mCurIdx = idx; const song = mFiltered[idx]; mAudio.src = song.u; mAudio.load(); mTitle.innerText = song.t; mCover.style.backgroundImage = 'none'; mEmoji.style.opacity = '1'; mParsedLyrics = []; mCurLyricIdx = -1; lyricBox.innerHTML = '<div style="color:gray;font-size:12px;">解析中...</div>'; if(mCoverURL) { URL.revokeObjectURL(mCoverURL); mCoverURL = null; } if(autoPlay) mAudio.play().catch(()=>{}); fetch(song.u).then(r=>{if(r.ok)return r.blob();throw ''}).then(blob=>{ if(!window.jsmediatags) return; window.jsmediatags.read(blob, { onSuccess: tag => { const pic = tag.tags.picture; if(pic) { const bl = new Blob([new Uint8Array(pic.data)], {type: pic.format}); mCoverURL = URL.createObjectURL(bl); mCover.style.backgroundImage = `url(${mCoverURL})`; mEmoji.style.opacity = '0'; } const ex = o => { if(!o)return ""; if(typeof o==='string')return o; if(o.text)return o.text; return ""; }; let raw = ex(tag.tags.lyrics) || ex(tag.tags.USLT); if(raw){ mIsSynced=false; lyricStatus.innerText='纯文字'; lyricBox.innerHTML = `<div style="color:gray;font-size:11px;white-space:pre-wrap;">${raw}</div>`; } else { lyricBox.innerHTML = '<div style="color:gray;font-size:12px;">纯音乐</div>'; } }, onError: () => {} }); }).catch(()=>{}); renderMList(); };
-    
-    mPlayBtn.onclick = () => mAudio.paused ? mAudio.play() : mAudio.pause(); mNextBtn.onclick = () => mLoad((mCurIdx + 1) % mFiltered.length, true); mPrevBtn.onclick = () => mLoad((mCurIdx - 1 + mFiltered.length) % mFiltered.length, true);
-    mAudio.onplay = () => { mVinylWrap.style.animation = 'm-spin 6s linear infinite'; mPlayIcon.className = 'fa-solid fa-pause'; }; mAudio.onpause = () => { mVinylWrap.style.animation = 'none'; mPlayIcon.className = 'fa-solid fa-play'; };
-    mAudio.ontimeupdate = () => { let s = mAudio.currentTime; if(!isNaN(s)) mTime.innerText = `${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`; };
   </script>
 </body>
 </html>
