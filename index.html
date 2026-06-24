@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="JR System">
   
-  <title>JR Chat V9.1 - Responsive Pro</title>
+  <title>JRchat</title>
   
   <link href="https://gs.jurieo.com/gemini/fonts-googleapis/css2?family=Inter:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -227,7 +227,7 @@
     <div style="display:flex; align-items:center; gap:12px;">
       <div class="call-avatar" id="call-avatar">U</div>
       <div class="call-info">
-        <div class="call-name" id="call-name">特工代号</div>
+        <div class="call-name" id="call-name">好友名称</div>
         <div class="call-status" id="call-status"><i class="fa-solid fa-satellite-dish"></i> 正在呼叫...</div>
       </div>
     </div>
@@ -249,7 +249,7 @@
         <div class="profile-name-lg" id="prof-name">Username <i class="fa-solid fa-circle-check" style="color:var(--success-color); font-size:16px;"></i></div>
         <div class="profile-email" id="prof-email">user@domain.com</div>
         <div class="profile-bio-box">
-          <div style="font-size:11px; color:var(--accent-color); font-weight:bold; margin-bottom:5px; text-transform:uppercase;">Agent Bio</div>
+          <div style="font-size:11px; color:var(--accent-color); font-weight:bold; margin-bottom:5px; text-transform:uppercase;">Agent Info</div>
           <textarea class="profile-bio-text" id="prof-bio" rows="3" readonly></textarea>
         </div>
         <div class="profile-actions" id="prof-actions"></div>
@@ -261,7 +261,7 @@
     <div class="auth-card">
       <div class="auth-brand"><i class="fa-brands fa-space-awesome" style="font-size:30px; color:var(--accent-color); margin-bottom:10px;"></i></div>
       <h2>JR System</h2>
-      <div style="color:var(--text-muted); font-size:12px; margin-bottom:20px;">安全网关 V9.1 · WebAuthn 通行密钥</div>
+      <div style="color:var(--text-muted); font-size:12px; margin-bottom:20px;">JRchat - JR Global</div>
       
       <div id="auth-main-ui">
         <div class="auth-input-group">
@@ -281,19 +281,19 @@
           <input type="password" id="auth-pwd" class="auth-input" placeholder="存取密钥 (Password)" autocomplete="current-password">
         </div>
         
-        <button class="auth-btn default-only" id="btn-login" onclick="execLogin()">建立连接</button>
+        <button class="auth-btn default-only" id="btn-login" onclick="execLogin()">登入</button>
         <button class="auth-btn default-only" id="btn-passkey-login" onclick="loginWithPasskey()" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-strong); margin-top:10px; color:#fff; box-shadow:none;">
-          <i class="fa-brands fa-apple" style="font-size:18px;"></i> 通行密钥一键安全登录
+          <i class="fa-brands fa-apple" style="font-size:18px;"></i> 通行密钥一键登录
         </button>
         
-        <button class="auth-btn reg-only" id="btn-register" onclick="execRegister()" style="display:none; background:#0ea5e9;">注册特工</button>
-        <button class="auth-btn forgot-only" id="btn-get-code" onclick="requestCode()" style="display:none; background:#f59e0b;">获取验证码</button>
-        <button class="auth-btn forgot-only" id="btn-reset-pwd" onclick="execResetPwd()" style="display:none; background:#10b981;">重设密钥</button>
+        <button class="auth-btn reg-only" id="btn-register" onclick="execRegister()" style="display:none; background:#0ea5e9;">注册账号</button>
+        <button class="auth-btn forgot-only" id="btn-get-code" onclick="requestCode()" style="display:none; background:#f59e0b;">获取验证码【不可用】</button>
+        <button class="auth-btn forgot-only" id="btn-reset-pwd" onclick="execResetPwd()" style="display:none; background:#10b981;">重设密钥【不可用】</button>
 
         <div style="display:flex; justify-content:space-between; margin-top:20px; font-size:13px; color:var(--text-muted);">
-          <span class="auth-switch" onclick="switchAuthMode('register')" id="switch-reg">注册新特工</span>
+          <span class="auth-switch" onclick="switchAuthMode('register')" id="switch-reg">注册账号</span>
           <span class="auth-switch" onclick="switchAuthMode('login')" id="switch-log" style="display:none;">返回登录</span>
-          <span class="auth-switch" onclick="switchAuthMode('forgot')" id="switch-fgt">忘记密码？</span>
+          <span class="auth-switch" onclick="switchAuthMode('forgot')" id="switch-fgt">忘记密码【不可用】</span>
         </div>
       </div>
 
@@ -373,7 +373,7 @@
 
     <div id="view-moments" class="app-view">
       <div class="chat-header" style="justify-content:space-between; position:sticky; top:0; z-index:10; flex-shrink:0;">
-        <div class="chat-title"><i class="fa-solid fa-camera-retro" style="color:var(--text-muted)"></i> 特工动态</div>
+        <div class="chat-title"><i class="fa-solid fa-camera-retro" style="color:var(--text-muted)"></i> 账号动态</div>
         <button class="tool-btn" style="color:var(--accent-color);" onclick="openPostMomentModal()"><i class="fa-solid fa-pen-to-square"></i></button>
       </div>
       <div id="moments-feed"></div>
@@ -395,7 +395,7 @@
         <div class="sec-icon" style="color:var(--danger-color);"><i class="fa-solid fa-power-off"></i></div>
         <h3 style="color:#fff; margin-bottom:8px;">退出系统</h3>
         <p style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">清空本地安全密钥与会话令牌，断开与系统的连接。</p>
-        <button class="auth-btn" style="background:var(--danger-bg); color:var(--danger-color); border-radius:30px;" onclick="execLogout()"><i class="fa-solid fa-right-from-bracket"></i> 安全注销</button>
+        <button class="auth-btn" style="background:var(--danger-bg); color:var(--danger-color); border-radius:30px;" onclick="execLogout()"><i class="fa-solid fa-right-from-bracket"></i> 安全登出</button>
       </div>
     </div>
 
@@ -472,7 +472,7 @@
 
     window.loginWithPasskey = async () => {
       const u = document.getElementById('auth-usr').value.trim();
-      if(!u) return toast('请先输入特工代号识别身份', 'error');
+      if(!u) return toast('请先输入账户名称识别身份', 'error');
       socket.emit('request passkey login', { username: u });
     };
 
@@ -506,7 +506,7 @@
     }
     function execLogin() { 
       const u=document.getElementById('auth-usr').value.trim(); const p=document.getElementById('auth-pwd').value.trim(); 
-      if(u&&p) { loginTempUser = u; loginTempPwd = p; socket.emit('login', { username: u, password: p, sessionToken: authSessionToken }); } else { toast('请输入特工代号与密钥', 'error'); }
+      if(u&&p) { loginTempUser = u; loginTempPwd = p; socket.emit('login', { username: u, password: p, sessionToken: authSessionToken }); } else { toast('请输入账号名称与密钥', 'error'); }
     }
     function execRegister() { const u=document.getElementById('auth-usr').value.trim(), e=document.getElementById('auth-email').value.trim(), p=document.getElementById('auth-pwd').value.trim(); if(u&&e&&p){socket.emit('register',{username:u,email:e,password:p});}else toast('请填写完整信息','error'); }
     function requestCode() { const u=document.getElementById('auth-usr').value.trim(), e=document.getElementById('auth-email').value.trim(); if(!u || !e) return toast('请输入特工代号与邮箱', 'error'); socket.emit('request password reset', { username: u, email: e }); }
@@ -576,7 +576,7 @@
     // ==========================================
     window.openPostMomentModal = () => {
       customModal({
-        title: '发布动态', desc: '向网络分享您的特工状态', ph: '输入内容...', 
+        title: '发布动态', desc: '向网络分享您的状态', ph: '输入内容...', 
         cText: '发布', fn: v => { if(v) socket.emit('post moment', { username: currUser, content: v }); }
       });
     };
