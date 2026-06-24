@@ -94,13 +94,22 @@ io.on('connection', (socket) => {
       if (!user) return socket.emit('auth error', '该特工不存在！');
       if (user.isBanned) return socket.emit('auth error', '账户已被强制封禁！');
 
+      // 【核心修复】：优先校验 Session Token。如果 Token 有效，直接放行（静默刷新免密）
+      if (sessionToken && sessionTokens.get(username) === sessionToken) {
+        return finishLogin(user, socket, sessionToken);
+      }
+
+      // 如果没有 Token 或 Token 失效，则进行常规的密码校验
+      if (!password) return socket.emit('auth error', '请输入密钥！');
       const isMatch = bcrypt.compareSync(password, user.password);
       if (!isMatch) return socket.emit('auth error', '密钥不匹配！');
 
+      // 密码校验通过后，检查 2FA 状态
       if (!user.twoFactorEnabled) return socket.emit('2fa setup required', { secret: otplib.authenticator.generateSecret() });
-      if (sessionToken && sessionTokens.get(username) === sessionToken) return finishLogin(user, socket, sessionToken);
       socket.emit('2fa verification required');
-    } catch (err) {}
+    } catch (err) {
+      console.error(err);
+    }
   });
 
   socket.on('setup 2fa', async ({ username, password, secret, code }) => {
@@ -198,7 +207,7 @@ io.on('connection', (socket) => {
   
   socket.on('create group', async ({ username, groupName }) => { try { const groupId = Math.floor(1000+Math.random()*9000).toString(); await new Group({ groupId, groupName, members: [username] }).save(); await User.updateOne({ username }, { $push: { groups: { groupId, groupName } } }); socket.emit('update sidebar'); } catch(e){} });
   
-  // 修复：加入群组查验机制
+  // 加入群组查验机制
   socket.on('join group by id', async ({ username, groupId }) => { 
     try { 
       const group=await Group.findOne({groupId}); 
@@ -211,7 +220,7 @@ io.on('connection', (socket) => {
     } catch(e){} 
   });
   
-  // 修复：添加好友存在性查验
+  // 添加好友存在性查验
   socket.on('add friend', async ({ username, friendName }) => { 
     try { 
       if(username===friendName) return; 
